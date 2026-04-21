@@ -1,0 +1,37 @@
+# Go binaries (compiled output at project root or in bin/)
+/bin/
+/dist/
+/server
+
+# Build output
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Module download cache (populated by go mod download / go get)
+vendor/
+
+# Environment secrets — never commit real values
+.env
+
+# IDE / editor artefacts
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Air live-reload binary
+tmp/

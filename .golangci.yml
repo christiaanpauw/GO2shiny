@@ -1,0 +1,76 @@
+# golangci-lint configuration
+# Docs: https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  # Only lint Go files tracked by the module.
+  modules-download-mode: readonly
+
+linters:
+  # Disable all linters, then explicitly enable only the ones we want.
+  disable-all: true
+  enable:
+    - errcheck      # Don't silently discard errors.
+    - govet         # Correctness checks (alignment, printf format strings, etc.).
+    - staticcheck   # Subtle bugs and deprecated API usage.
+    - revive        # Style and idiomatic-Go checks (replaces golint).
+    - gosec         # Security issues (SQL injection, weak crypto, etc.).
+    - gofmt         # Formatting — fails if code is not gofmt'd.
+    - goimports     # Import grouping and formatting.
+    - unused        # Exported identifiers that are never used.
+
+linters-settings:
+  revive:
+    # Enforce doc comments only on exported symbols, not every function.
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+        arguments:
+          - "checkPrivateReceivers"
+          - "sayRepetitiveInsteadOfStutters"
+      # Allow single-letter variable names in short functions/loops.
+      - name: var-naming
+        severity: warning
+        disabled: false
+      # Warn on unused parameters but don't fail the build.
+      - name: unused-parameter
+        severity: warning
+        disabled: false
+
+  gosec:
+    # Exclude low-signal rules that produce many false positives.
+    excludes:
+      - G104  # Errors unhandled (duplicate of errcheck)
+      - G304  # File path provided as taint input (too noisy for template loading)
+
+  errcheck:
+    # Check for errors from defer statements too.
+    check-type-assertions: true
+    check-blank: false
+
+issues:
+  # Don't fail on the same issue appearing in many files — just list each once.
+  max-same-issues: 0
+
+  # Exclude overly pedantic messages that add noise without value.
+  exclude-rules:
+    # Allow fmt.Println / log.Println in main packages and scripts.
+    - path: "cmd/"
+      linters:
+        - revive
+      text: "use of fmt.Println"
+    - path: "scripts/"
+      linters:
+        - revive
+        - gosec
+    # Test files: allow unused variables and unexported test helpers.
+    - path: "_test\\.go"
+      linters:
+        - unused
+        - revive
+        - gosec
+
+  # Treat all issues as errors (i.e., non-zero exit code) unless severity is warning.
+  # This keeps the pipeline strict but not pedantic.
+  new: false
