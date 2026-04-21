@@ -40,7 +40,7 @@ The [New Zealand Trade Intelligence Dashboard](https://gallery.shinyapps.io/nz-t
 **Decision:** Use [Go](https://go.dev) with the [Chi](https://github.com/go-chi/chi) router.
 
 **Rationale:**
-- Chi is lightweight (~1 300 lines), idiomatic, and fully compatible with `net/http` handlers — no lock-in.
+- Chi is lightweight (~1,300 lines), idiomatic, and fully compatible with `net/http` handlers — no lock-in.
 - Middleware composability (logger, recoverer, GZIP, CORS, rate-limit) matches Shiny's server-side session model.
 - Go's compiled binary deploys as a single executable — no runtime dependencies.
 - Go's `html/template` gives XSS-safe server-side rendering without a heavy framework.
