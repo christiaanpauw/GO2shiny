@@ -1,0 +1,28 @@
+/* NZ Trade Intelligence Dashboard — Tabler overrides and custom styles */
+
+:root {
+    --trd-primary: #006b3c;   /* NZ green */
+    --trd-secondary: #00247d; /* NZ blue  */
+}
+
+.navbar-brand-image {
+    height: 2rem;
+}
+
+/* Sidebar active state */
+.nav-link.active {
+    font-weight: 600;
+}
+
+/* Chart containers */
+.chart-container {
+    width: 100%;
+    height: 400px;
+}
+
+/* KPI cards */
+.card-kpi .card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--trd-primary);
+}
