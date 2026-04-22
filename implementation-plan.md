@@ -10,9 +10,9 @@ This document breaks the rebuild into ten sequential phases. Each phase has a cl
 
 ## Phase Checklist (top-level overview)
 
-- [x] **Phase 0 – Repository & CI bootstrap** ← *current*
-- [ ] **Phase 1 – Skeleton server**
-- [ ] **Phase 2 – Database & migrations**
+- [x] **Phase 0 – Repository & CI bootstrap**
+- [x] **Phase 1 – Skeleton server**
+- [x] **Phase 2 – Database & migrations**
 - [ ] **Phase 3 – KPI value-boxes**
 - [ ] **Phase 4 – Charts**
 - [ ] **Phase 5 – Data tables**
@@ -54,24 +54,24 @@ F-50, F-51, F-70, NF-40, NF-41, NF-42
 
 ### Tasks
 
-- [ ] `go.mod` — add dependencies: `go-chi/chi/v5`, `jackc/pgx/v5`.
-- [ ] `cmd/server/main.go` — start Chi router on `$PORT`, wire middleware (Logger, Recoverer, Compress).
-- [ ] `internal/config/config.go` — read env vars (`DATABASE_URL`, `PORT`, `LOG_LEVEL`, etc.).
-- [ ] `web/templates/base.html` — Tabler UI layout: sidebar nav, header, content block, footer.
-- [ ] `web/static/css/app.css` — Tabler overrides and custom styles stub.
-- [ ] `web/static/js/charts.js` — ECharts initialisation helpers stub.
-- [ ] `internal/handlers/dashboard.go` — `GET /dashboard` renders `base.html` with empty content block.
-- [ ] `GET /health` handler — returns `{"status":"ok"}`.
-- [ ] Static file server: `GET /static/*` served from `web/static/`.
-- [ ] `Dockerfile` (multi-stage: `golang:1.23-alpine` → `alpine:3.20`).
-- [ ] `docker-compose.yml` — `app` service + `db` (postgres:16) service.
-- [ ] `.env.example` — placeholder values for all env vars.
+- [x] `go.mod` — add dependencies: `go-chi/chi/v5`, `jackc/pgx/v5`.
+- [x] `cmd/server/main.go` — start Chi router on `$PORT`, wire middleware (Logger, Recoverer, Compress).
+- [x] `internal/config/config.go` — read env vars (`DATABASE_URL`, `PORT`, `LOG_LEVEL`, etc.).
+- [x] `web/templates/base.html` — Tabler UI layout: sidebar nav, header, content block, footer.
+- [x] `web/static/css/app.css` — Tabler overrides and custom styles stub.
+- [x] `web/static/js/charts.js` — ECharts initialisation helpers stub.
+- [x] `internal/handlers/dashboard.go` — `GET /dashboard` renders `base.html` with empty content block.
+- [x] `GET /health` handler — returns `{"status":"ok"}`.
+- [x] Static file server: `GET /static/*` served from `web/static/`.
+- [x] `Dockerfile` (multi-stage: `golang:1.23-alpine` → `alpine:3.20`).
+- [x] `docker-compose.yml` — `app` service + `db` (postgres:16) service.
+- [x] `.env.example` — placeholder values for all env vars.
 
 ### Tests
 
-- [ ] `TestHealthEndpoint` — GET `/health` returns 200 and correct JSON body.
-- [ ] `TestDashboardPageReturns200` — GET `/dashboard` returns 200 (no DB required; use `httptest`).
-- [ ] `TestStaticFilesServed` — GET `/static/css/app.css` returns 200.
+- [x] `TestHealthEndpoint` — GET `/health` returns 200 and correct JSON body.
+- [x] `TestDashboardPageReturns200` — GET `/dashboard` returns 200 (no DB required; use `httptest`).
+- [x] `TestStaticFilesServed` — GET `/static/css/app.css` returns 200.
 
 ### Exit Criterion
 
@@ -89,19 +89,19 @@ F-60, F-61, NF-21, NF-33
 
 ### Tasks
 
-- [ ] Add `pressly/goose/v3` dependency.
-- [ ] `internal/db/migrations/001_create_trade_flows.sql` — `trade_flows` table + indexes.
-- [ ] `internal/db/migrations/002_create_countries.sql` — `countries` reference table.
-- [ ] `internal/db/db.go` — `pgxpool.New`, `pool.Ping`, run embedded goose migrations at startup.
-- [ ] `internal/models/trade.go` — `TradeFlow`, `Country`, `CommoditySummary` structs.
-- [ ] `scripts/import_data.go` — CLI: read CSV, bulk `COPY` into `trade_flows` and `countries`.
-- [ ] `data/sample/` — a small synthetic CSV dataset (≥ 100 rows) for local dev and CI tests.
+- [x] Add `pressly/goose/v3` dependency.
+- [x] `internal/db/migrations/001_create_trade_flows.sql` — `trade_flows` table + indexes.
+- [x] `internal/db/migrations/002_create_countries.sql` — `countries` reference table.
+- [x] `internal/db/db.go` — `pgxpool.New`, `pool.Ping`, run embedded goose migrations at startup.
+- [x] `internal/models/trade.go` — `TradeFlow`, `Country`, `CommoditySummary` structs.
+- [x] `scripts/import_data/main.go` — CLI: read CSV, bulk `COPY` into `trade_flows` and `countries`.
+- [x] `data/sample/` — a small synthetic CSV dataset (≥ 100 rows) for local dev and CI tests.
 
 ### Tests
 
-- [ ] `TestMigrationsApply` — applies migrations against a test DB (Docker Compose `db` service in CI).
+- [x] `TestMigrationsApply` — applies migrations against a test DB (build tag: `integration`).
 - [ ] `TestImportCSV` — imports the sample dataset and verifies row counts.
-- [ ] `TestPoolPingFails` — pool startup fails fast when `DATABASE_URL` points to an unreachable host.
+- [x] `TestPoolPingFails` — pool startup fails fast when `DATABASE_URL` points to an unreachable host.
 
 ### Exit Criterion
 

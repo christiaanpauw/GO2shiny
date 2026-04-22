@@ -1,0 +1,30 @@
+services:
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: go2shiny
+      POSTGRES_USER: go2shiny
+      POSTGRES_PASSWORD: go2shiny
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U go2shiny -d go2shiny"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Override DATABASE_URL so it uses the Compose service name.
+      DATABASE_URL: postgres://go2shiny:go2shiny@db:5432/go2shiny?sslmode=disable
+    ports:
+      - "8080:8080"
