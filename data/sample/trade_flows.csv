@@ -1,0 +1,108 @@
+year,quarter,country,region,type_ie,type_gs,commodity,hs_code,value_nzd
+2021,,China,Asia,Exports,Goods,Dairy products,0401,7200.000
+2021,,China,Asia,Exports,Goods,Meat and edible meat offal,0201,1800.000
+2021,,China,Asia,Exports,Goods,Wood and articles of wood,4403,900.000
+2021,,China,Asia,Exports,Goods,Wool,5101,600.000
+2021,,China,Asia,Exports,Goods,Seafood,0302,450.000
+2021,,China,Asia,Imports,Goods,Electrical machinery,8517,4200.000
+2021,,China,Asia,Imports,Goods,Clothing and apparel,6101,1100.000
+2021,,China,Asia,Imports,Goods,Furniture,9403,700.000
+2021,,China,Asia,Imports,Goods,Plastics,3926,540.000
+2021,,China,Asia,Imports,Goods,Toys,9503,380.000
+2021,,Australia,Oceania,Exports,Goods,Dairy products,0401,900.000
+2021,,Australia,Oceania,Exports,Goods,Meat and edible meat offal,0201,600.000
+2021,,Australia,Oceania,Exports,Services,Tourism,,1800.000
+2021,,Australia,Oceania,Imports,Goods,Vehicles,8703,2200.000
+2021,,Australia,Oceania,Imports,Goods,Petroleum oils,2710,1400.000
+2021,,Australia,Oceania,Imports,Services,Financial services,,900.000
+2021,,United States,Americas,Exports,Goods,Dairy products,0401,600.000
+2021,,United States,Americas,Exports,Goods,Meat and edible meat offal,0201,900.000
+2021,,United States,Americas,Exports,Services,Tourism,,700.000
+2021,,United States,Americas,Imports,Goods,Aircraft,8802,1800.000
+2021,,United States,Americas,Imports,Goods,Pharmaceutical products,3004,800.000
+2021,,United States,Americas,Imports,Services,Business services,,1100.000
+2021,,Japan,Asia,Exports,Goods,Dairy products,0401,350.000
+2021,,Japan,Asia,Exports,Goods,Meat and edible meat offal,0201,420.000
+2021,,Japan,Asia,Exports,Goods,Seafood,0302,280.000
+2021,,Japan,Asia,Imports,Goods,Vehicles,8703,1600.000
+2021,,Japan,Asia,Imports,Goods,Electrical machinery,8517,700.000
+2021,,United Kingdom,Europe,Exports,Goods,Dairy products,0401,280.000
+2021,,United Kingdom,Europe,Exports,Goods,Meat and edible meat offal,0201,380.000
+2021,,United Kingdom,Europe,Exports,Services,Tourism,,500.000
+2021,,United Kingdom,Europe,Imports,Goods,Pharmaceutical products,3004,600.000
+2021,,United Kingdom,Europe,Imports,Services,Financial services,,700.000
+2022,,China,Asia,Exports,Goods,Dairy products,0401,7800.000
+2022,,China,Asia,Exports,Goods,Meat and edible meat offal,0201,1950.000
+2022,,China,Asia,Exports,Goods,Wood and articles of wood,4403,980.000
+2022,,China,Asia,Exports,Goods,Wool,5101,650.000
+2022,,China,Asia,Exports,Goods,Seafood,0302,490.000
+2022,,China,Asia,Imports,Goods,Electrical machinery,8517,4600.000
+2022,,China,Asia,Imports,Goods,Clothing and apparel,6101,1200.000
+2022,,China,Asia,Imports,Goods,Furniture,9403,760.000
+2022,,China,Asia,Imports,Goods,Plastics,3926,590.000
+2022,,China,Asia,Imports,Goods,Toys,9503,410.000
+2022,,Australia,Oceania,Exports,Goods,Dairy products,0401,970.000
+2022,,Australia,Oceania,Exports,Goods,Meat and edible meat offal,0201,640.000
+2022,,Australia,Oceania,Exports,Services,Tourism,,2100.000
+2022,,Australia,Oceania,Imports,Goods,Vehicles,8703,2400.000
+2022,,Australia,Oceania,Imports,Goods,Petroleum oils,2710,1700.000
+2022,,Australia,Oceania,Imports,Services,Financial services,,980.000
+2022,,United States,Americas,Exports,Goods,Dairy products,0401,650.000
+2022,,United States,Americas,Exports,Goods,Meat and edible meat offal,0201,980.000
+2022,,United States,Americas,Exports,Services,Tourism,,820.000
+2022,,United States,Americas,Imports,Goods,Aircraft,8802,2100.000
+2022,,United States,Americas,Imports,Goods,Pharmaceutical products,3004,870.000
+2022,,United States,Americas,Imports,Services,Business services,,1200.000
+2022,,Japan,Asia,Exports,Goods,Dairy products,0401,380.000
+2022,,Japan,Asia,Exports,Goods,Meat and edible meat offal,0201,450.000
+2022,,Japan,Asia,Exports,Goods,Seafood,0302,310.000
+2022,,Japan,Asia,Imports,Goods,Vehicles,8703,1750.000
+2022,,Japan,Asia,Imports,Goods,Electrical machinery,8517,760.000
+2022,,United Kingdom,Europe,Exports,Goods,Dairy products,0401,310.000
+2022,,United Kingdom,Europe,Exports,Goods,Meat and edible meat offal,0201,420.000
+2022,,United Kingdom,Europe,Exports,Services,Tourism,,560.000
+2022,,United Kingdom,Europe,Imports,Goods,Pharmaceutical products,3004,650.000
+2022,,United Kingdom,Europe,Imports,Services,Financial services,,760.000
+2023,,China,Asia,Exports,Goods,Dairy products,0401,8200.000
+2023,,China,Asia,Exports,Goods,Meat and edible meat offal,0201,2100.000
+2023,,China,Asia,Exports,Goods,Wood and articles of wood,4403,1050.000
+2023,,China,Asia,Exports,Goods,Wool,5101,700.000
+2023,,China,Asia,Exports,Goods,Seafood,0302,520.000
+2023,,China,Asia,Imports,Goods,Electrical machinery,8517,4900.000
+2023,,China,Asia,Imports,Goods,Clothing and apparel,6101,1300.000
+2023,,China,Asia,Imports,Goods,Furniture,9403,820.000
+2023,,China,Asia,Imports,Goods,Plastics,3926,630.000
+2023,,China,Asia,Imports,Goods,Toys,9503,440.000
+2023,,Australia,Oceania,Exports,Goods,Dairy products,0401,1020.000
+2023,,Australia,Oceania,Exports,Goods,Meat and edible meat offal,0201,680.000
+2023,,Australia,Oceania,Exports,Services,Tourism,,2400.000
+2023,,Australia,Oceania,Imports,Goods,Vehicles,8703,2600.000
+2023,,Australia,Oceania,Imports,Goods,Petroleum oils,2710,1900.000
+2023,,Australia,Oceania,Imports,Services,Financial services,,1050.000
+2023,,United States,Americas,Exports,Goods,Dairy products,0401,710.000
+2023,,United States,Americas,Exports,Goods,Meat and edible meat offal,0201,1050.000
+2023,,United States,Americas,Exports,Services,Tourism,,890.000
+2023,,United States,Americas,Imports,Goods,Aircraft,8802,2300.000
+2023,,United States,Americas,Imports,Goods,Pharmaceutical products,3004,940.000
+2023,,United States,Americas,Imports,Services,Business services,,1300.000
+2023,,Japan,Asia,Exports,Goods,Dairy products,0401,410.000
+2023,,Japan,Asia,Exports,Goods,Meat and edible meat offal,0201,480.000
+2023,,Japan,Asia,Exports,Goods,Seafood,0302,340.000
+2023,,Japan,Asia,Imports,Goods,Vehicles,8703,1900.000
+2023,,Japan,Asia,Imports,Goods,Electrical machinery,8517,820.000
+2023,,United Kingdom,Europe,Exports,Goods,Dairy products,0401,340.000
+2023,,United Kingdom,Europe,Exports,Goods,Meat and edible meat offal,0201,450.000
+2023,,United Kingdom,Europe,Exports,Services,Tourism,,610.000
+2023,,United Kingdom,Europe,Imports,Goods,Pharmaceutical products,3004,700.000
+2023,,United Kingdom,Europe,Imports,Services,Financial services,,820.000
+2023,,South Korea,Asia,Exports,Goods,Dairy products,0401,290.000
+2023,,South Korea,Asia,Exports,Goods,Meat and edible meat offal,0201,320.000
+2023,,South Korea,Asia,Imports,Goods,Vehicles,8703,950.000
+2023,,South Korea,Asia,Imports,Goods,Electrical machinery,8517,430.000
+2023,,India,Asia,Exports,Goods,Wool,5101,180.000
+2023,,India,Asia,Exports,Services,Education,,240.000
+2023,,India,Asia,Imports,Goods,Pharmaceutical products,3004,310.000
+2023,,Germany,Europe,Exports,Goods,Dairy products,0401,210.000
+2023,,Germany,Europe,Exports,Goods,Wine,2204,150.000
+2023,,Germany,Europe,Imports,Goods,Vehicles,8703,680.000
+2023,,Germany,Europe,Imports,Goods,Machinery,8479,420.000
