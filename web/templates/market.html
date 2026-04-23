@@ -1,0 +1,324 @@
+{{define "content"}}
+
+{{/* Country selector row */}}
+<div class="row row-cards">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Country / Partner Selection</h3>
+      </div>
+      <div class="card-body">
+        <div id="country-select-container">
+          <select id="country-select" multiple
+                  class="form-select"
+                  style="height: 10rem;"
+                  onchange="onCountryChange()">
+          </select>
+        </div>
+        <div class="mt-2">
+          <button class="btn btn-sm btn-outline-secondary" onclick="clearCountrySelection()">
+            Clear selection
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{/* World map choropleth */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">World Trade Map</h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-world-map" style="height:400px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{/* Country time-series chart */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Trade Values by Country</h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-country-timeseries" style="height:350px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{/* Market report — HTMX partial (data table for selected countries) */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Country Report</h3>
+      </div>
+      <div class="card-body p-0">
+        <div id="market-report-container"
+             hx-get="/partials/market-report"
+             hx-trigger="load"
+             hx-include="#market-filter-form"
+             hx-swap="innerHTML">
+          <p class="text-muted text-center py-4">Loading…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{/* Hidden form fields used by hx-include */}}
+<form id="market-filter-form" style="display:none">
+  <input type="hidden" id="mf-year-from" name="year_from" value="1990">
+  <input type="hidden" id="mf-year-to"   name="year_to"   value="{{.Year}}">
+  <input type="hidden" id="mf-type-ie"   name="type_ie"   value="">
+  <input type="hidden" id="mf-type-gs"   name="type_gs"   value="">
+</form>
+
+<script>
+(function() {
+  const p = new URLSearchParams(window.location.search);
+  const yearFrom = p.get('year_from') || '1990';
+  const yearTo   = p.get('year_to')   || String(new Date().getFullYear());
+  const typeIE   = p.get('type_ie')   || '';
+  const typeGS   = p.get('type_gs')   || '';
+
+  // Sync hidden form fields with URL params.
+  document.getElementById('mf-year-from').value = yearFrom;
+  document.getElementById('mf-year-to').value   = yearTo;
+  document.getElementById('mf-type-ie').value   = typeIE;
+  document.getElementById('mf-type-gs').value   = typeGS;
+
+  // Populate the country multi-select from the API.
+  let allCountries = [];
+
+  async function loadCountries() {
+    const params = new URLSearchParams({ year_from: yearFrom, year_to: yearTo });
+    if (typeIE) params.set('type_ie', typeIE);
+    try {
+      const resp = await fetch('/api/trade/countries?' + params.toString());
+      if (!resp.ok) return;
+      allCountries = await resp.json();
+      const select = document.getElementById('country-select');
+      allCountries.forEach(function(ct) {
+        const opt = document.createElement('option');
+        opt.value = ct.country;
+        opt.textContent = ct.country + (ct.region ? ' (' + ct.region + ')' : '');
+        select.appendChild(opt);
+      });
+      renderWorldMap(allCountries);
+    } catch (e) {
+      console.error('loadCountries error:', e);
+    }
+  }
+
+  // Render a choropleth world map.
+  async function renderWorldMap(countryData) {
+    const el = document.getElementById('chart-world-map');
+    if (!el) return;
+
+    // Try to load world GeoJSON. Prefer a locally-served file (place world.json
+    // at web/static/js/world.json to avoid CDN dependency in production).
+    // Falls back to the ECharts GitHub source for convenience in development.
+    const geoUrls = [
+      '/static/js/world.json',
+      'https://cdn.jsdelivr.net/gh/apache/echarts/test/data/map/json/world.json'
+    ];
+
+    let worldJson = null;
+    for (const url of geoUrls) {
+      try {
+        const geoResp = await fetch(url);
+        if (geoResp.ok) {
+          worldJson = await geoResp.json();
+          break;
+        }
+      } catch (_) {
+        // try next URL
+      }
+    }
+
+    if (!worldJson) {
+      el.innerHTML = '<p class="text-muted text-center py-4">World map data unavailable. To enable this chart, place <code>world.json</code> in <code>web/static/js/</code>.</p>';
+      return;
+    }
+
+    echarts.registerMap('world', worldJson);
+
+    const existing = echarts.getInstanceByDom(el);
+    if (existing) existing.dispose();
+
+    const chart = echarts.init(el);
+
+    // Build data: map country name → total trade value.
+    const mapData = countryData.map(function(ct) {
+      return { name: ct.country, value: ct.exports + ct.imports };
+    });
+
+    chart.setOption({
+      tooltip: {
+        trigger: 'item',
+        formatter: function(params) {
+          if (params.value == null) return params.name + ': No data';
+          return params.name + ': NZD ' + params.value.toFixed(1) + 'M';
+        }
+      },
+      visualMap: {
+        min: 0,
+        max: Math.max.apply(null, mapData.map(function(d) { return d.value; })) || 1,
+        text: ['High', 'Low'],
+        realtime: false,
+        calculable: true,
+        inRange: { color: ['#d4e6f1', '#1a5276'] }
+      },
+      series: [{
+        name: 'Total Trade',
+        type: 'map',
+        map: 'world',
+        roam: true,
+        data: mapData,
+        label: { show: false }
+      }]
+    });
+
+    window.addEventListener('resize', function() { chart.resize(); });
+  }
+
+  // Called when the country multi-select changes.
+  window.onCountryChange = function() {
+    const select = document.getElementById('country-select');
+    const selected = Array.from(select.selectedOptions).map(function(o) { return o.value; });
+    updateReport(selected);
+    if (selected.length > 0) {
+      updateCountryChart(selected);
+    } else {
+      clearCountryChart();
+    }
+  };
+
+  window.clearCountrySelection = function() {
+    const select = document.getElementById('country-select');
+    Array.from(select.options).forEach(function(o) { o.selected = false; });
+    updateReport([]);
+    clearCountryChart();
+  };
+
+  function updateReport(countries) {
+    const container = document.getElementById('market-report-container');
+    if (!container) return;
+
+    const params = new URLSearchParams();
+    params.set('year_from', document.getElementById('mf-year-from').value);
+    params.set('year_to',   document.getElementById('mf-year-to').value);
+    const tie = document.getElementById('mf-type-ie').value;
+    const tgs = document.getElementById('mf-type-gs').value;
+    if (tie) params.set('type_ie', tie);
+    if (tgs) params.set('type_gs', tgs);
+    countries.forEach(function(c) { params.append('countries[]', c); });
+
+    htmx.ajax('GET', '/partials/market-report?' + params.toString(), {
+      target: '#market-report-container',
+      swap: 'innerHTML'
+    });
+  }
+
+  async function updateCountryChart(countries) {
+    const el = document.getElementById('chart-country-timeseries');
+    if (!el) return;
+
+    const params = new URLSearchParams({
+      year_from: document.getElementById('mf-year-from').value,
+      year_to:   document.getElementById('mf-year-to').value,
+    });
+    const tie = document.getElementById('mf-type-ie').value;
+    const tgs = document.getElementById('mf-type-gs').value;
+    if (tie) params.set('type_ie', tie);
+    if (tgs) params.set('type_gs', tgs);
+    countries.forEach(function(c) { params.append('countries[]', c); });
+
+    const existing = echarts.getInstanceByDom(el);
+    if (existing) existing.dispose();
+    const chart = echarts.init(el);
+    chart.showLoading();
+
+    try {
+      const resp = await fetch('/api/market/timeseries?' + params.toString());
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+
+      // Group data by country.
+      const byCountry = {};
+      const yearsSet = new Set();
+      data.forEach(function(pt) {
+        if (!byCountry[pt.country]) byCountry[pt.country] = {};
+        byCountry[pt.country][pt.year] = pt.exports + pt.imports;
+        yearsSet.add(pt.year);
+      });
+
+      const years = Array.from(yearsSet).sort();
+      const series = Object.entries(byCountry).map(function([country, yearData]) {
+        return {
+          name: country,
+          type: 'line',
+          smooth: true,
+          data: years.map(function(y) { return yearData[y] || 0; })
+        };
+      });
+
+      chart.setOption({
+        tooltip: { trigger: 'axis' },
+        legend: { type: 'scroll' },
+        xAxis: { type: 'category', data: years, name: 'Year' },
+        yAxis: { type: 'value', name: 'NZD M' },
+        series: series
+      });
+    } catch (e) {
+      console.error('updateCountryChart error:', e);
+      el.innerHTML = '<p class="text-danger text-center py-4">Failed to load chart data.</p>';
+      return;
+    } finally {
+      chart.hideLoading();
+    }
+    window.addEventListener('resize', function() { chart.resize(); });
+  }
+
+  function clearCountryChart() {
+    const el = document.getElementById('chart-country-timeseries');
+    if (!el) return;
+    const existing = echarts.getInstanceByDom(el);
+    if (existing) existing.dispose();
+    el.innerHTML = '<p class="text-muted text-center py-4">Select countries above to view the chart.</p>';
+  }
+
+  // Respond to global sidebar filter changes.
+  document.addEventListener('filter-changed', function(e) {
+    const d = e.detail;
+    document.getElementById('mf-year-from').value = d.year_from;
+    document.getElementById('mf-year-to').value   = d.year_to;
+    document.getElementById('mf-type-ie').value   = d.type_ie || '';
+    document.getElementById('mf-type-gs').value   = d.type_gs || '';
+
+    // Reload country list with new filters.
+    const select = document.getElementById('country-select');
+    while (select.options.length) select.remove(0);
+    allCountries = [];
+
+    loadCountries().then(function() {
+      // Refresh report with new filters.
+      const selected = Array.from(select.selectedOptions).map(function(o) { return o.value; });
+      updateReport(selected);
+    });
+  });
+
+  // Initial load.
+  loadCountries();
+})();
+</script>
+
+{{end}}

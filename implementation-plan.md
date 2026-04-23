@@ -17,7 +17,7 @@ This document breaks the rebuild into ten sequential phases. Each phase has a cl
 - [x] **Phase 4 – Charts**
 - [x] **Phase 5 – Data tables**
 - [x] **Phase 6 – Sidebar filters**
-- [ ] **Phase 7 – Market Intelligence tab**
+- [x] **Phase 7 – Market Intelligence tab**
 - [ ] **Phase 8 – Commodity Intelligence tab**
 - [ ] **Phase 9 – Polish & UX hardening**
 - [ ] **Phase 10 – Deployment packaging**
@@ -233,18 +233,18 @@ F-10–F-13
 
 ### Tasks
 
-- [ ] `internal/db/queries_market.go` — country-level aggregation query.
-- [ ] `internal/handlers/market.go` — `GET /market`, `GET /partials/market-report`, `GET /api/trade/countries`.
-- [ ] `web/templates/market.html` — country selector, time-series chart, data table.
-- [ ] `web/templates/partials/market_report.html` — HTMX partial for country report.
-- [ ] ECharts geo/map or scatter-map for world map (F-13).
-- [ ] Sidebar country multi-select populated from `GET /api/trade/countries`.
+- [x] `internal/db/queries_market.go` — country-level aggregation query.
+- [x] `internal/handlers/market.go` — `GET /market`, `GET /partials/market-report`, `GET /api/trade/countries`.
+- [x] `web/templates/market.html` — country selector, time-series chart, data table.
+- [x] `web/templates/partials/market_report.html` — HTMX partial for country report.
+- [x] ECharts geo/map or scatter-map for world map (F-13).
+- [x] Sidebar country multi-select populated from `GET /api/trade/countries`.
 
 ### Tests
 
-- [ ] `TestMarketPageRenders` — GET `/market` returns 200.
-- [ ] `TestCountriesAPI` — returns valid list of country objects with totals.
-- [ ] `TestMarketReportPartial` — `?countries[]=China` returns correct HTML.
+- [x] `TestMarketPageRenders` — GET `/market` returns 200.
+- [x] `TestCountriesAPI` — returns valid list of country objects with totals.
+- [x] `TestMarketReportPartial` — `?countries[]=China` returns correct HTML.
 
 ### Exit Criterion
 
