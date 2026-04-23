@@ -10,6 +10,26 @@ COPY internal/db/migrations /migrations
 ENTRYPOINT ["goose", "-dir", "/migrations", "postgres"]
 CMD ["up"]
 
+# ── Importer stage ─────────────────────────────────────────────────────────────
+# Builds the import_data CLI and bundles the CSV seed files.
+# Used as a one-shot init container in docker-compose.yml.
+FROM golang:1.23-alpine AS importer
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -trimpath \
+    -ldflags="-s -w" \
+    -o /bin/import_data \
+    ./scripts/import_data
+
+ENTRYPOINT ["/bin/import_data"]
+CMD ["-trade", "data/sample/trade_flows.csv", "-countries", "data/sample/countries.csv"]
+
 # ── Build stage ──────────────────────────────────────────────────────────────
 FROM golang:1.23-alpine AS builder
 

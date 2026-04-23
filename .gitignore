@@ -2,6 +2,7 @@
 /bin/
 /dist/
 /server
+/import_data
 
 # Build output
 *.exe
