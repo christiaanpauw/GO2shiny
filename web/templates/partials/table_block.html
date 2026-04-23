@@ -1,0 +1,34 @@
+{{define "table_block"}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Trade Data</h3>
+        <div class="card-options">
+          <button id="btn-download-csv" class="btn btn-sm btn-outline-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="16" height="16" viewBox="0 0 24 24"
+                 stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/>
+              <path d="M7 11l5 5l5 -5"/>
+              <path d="M12 4l0 12"/>
+            </svg>
+            Download CSV
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="input-group px-3 py-2">
+          <input id="table-search" type="text" class="form-control form-control-sm"
+                 placeholder="Search country, commodity…" aria-label="Search table"/>
+        </div>
+        <div id="trade-table"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  initTradeTable('trade-table', '/api/trade/table', 'btn-download-csv', 'table-search');
+</script>
+{{end}}
