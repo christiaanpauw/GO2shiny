@@ -1,3 +1,5 @@
+x-db-url: &db-url postgres://go2shiny:go2shiny@db:5432/go2shiny?sslmode=disable
+
 services:
 
   db:
@@ -23,9 +25,20 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://go2shiny:go2shiny@db:5432/go2shiny?sslmode=disable
+      DATABASE_URL: *db-url
     # Use shell form so $DATABASE_URL is expanded at runtime.
     entrypoint: ["sh", "-c", "goose -dir /migrations postgres $$DATABASE_URL up"]
+    restart: on-failure
+
+  import_data:
+    build:
+      context: .
+      target: importer
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: *db-url
     restart: on-failure
 
   app:
@@ -34,12 +47,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      migrate:
+      import_data:
         condition: service_completed_successfully
     env_file:
       - .env
     environment:
       # Override DATABASE_URL so it uses the Compose service name.
-      DATABASE_URL: postgres://go2shiny:go2shiny@db:5432/go2shiny?sslmode=disable
+      DATABASE_URL: *db-url
     ports:
       - "8009:8080"
