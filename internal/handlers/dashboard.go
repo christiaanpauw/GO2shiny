@@ -10,6 +10,8 @@ import (
 "sync"
 "time"
 
+"golang.org/x/sync/singleflight"
+
 "github.com/christiaanpauw/GO2shiny/internal/db"
 )
 
@@ -48,11 +50,14 @@ value     db.KPISummary
 expiresAt time.Time
 }
 
-// kpiCache is a simple TTL in-memory store for KPI summaries, keyed by year.
+// kpiCache is a TTL in-memory store for KPI summaries, keyed by year.
+// A singleflight.Group prevents thundering-herd duplicate DB fetches when
+// the cache expires under concurrent load.
 type kpiCache struct {
 mu      sync.Mutex
 entries map[int]kpiCacheEntry
 ttl     time.Duration
+sf      singleflight.Group
 }
 
 func newKPICache(ttl time.Duration) *kpiCache {
@@ -63,7 +68,8 @@ ttl:     ttl,
 }
 
 // getOrFetch returns a cached KPISummary for year if it is still valid;
-// otherwise it calls fetch, stores the result, and returns it.
+// otherwise it calls fetch exactly once (even under concurrent requests for
+// the same key), stores the result, and returns it.
 func (c *kpiCache) getOrFetch(
 ctx context.Context,
 year int,
@@ -77,14 +83,26 @@ return entry.value, nil
 }
 c.mu.Unlock()
 
-// Fetch outside the lock to avoid blocking other goroutines during DB I/O.
-val, err := fetch(ctx, year)
+// Coalesce concurrent fetches for the same year into a single DB call.
+key := strconv.Itoa(year)
+v, err, _ := c.sf.Do(key, func() (any, error) {
+return fetch(ctx, year)
+})
 if err != nil {
 return db.KPISummary{}, err
 }
 
+val, _ := v.(db.KPISummary)
+
 c.mu.Lock()
-c.entries[year] = kpiCacheEntry{value: val, expiresAt: time.Now().Add(c.ttl)}
+// Evict expired entries on each write to bound memory usage.
+now := time.Now()
+for k, e := range c.entries {
+if now.After(e.expiresAt) {
+delete(c.entries, k)
+}
+}
+c.entries[year] = kpiCacheEntry{value: val, expiresAt: now.Add(c.ttl)}
 c.mu.Unlock()
 
 return val, nil
