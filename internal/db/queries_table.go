@@ -62,6 +62,8 @@ func (pq *PoolQuerier) GetTablePage(ctx context.Context, page, size int, q, type
 		escaped = strings.ReplaceAll(escaped, "_", `\_`)
 		escaped = strings.ReplaceAll(escaped, "%", `\%`)
 		pattern := "%" + escaped + "%"
+		// The same parameter index is intentional: all four ILIKE conditions
+		// reference the single pattern argument appended below.
 		idx := len(args) + 1
 		conds = append(conds, fmt.Sprintf(
 			"(country ILIKE $%d OR type_ie ILIKE $%d OR type_gs ILIKE $%d OR commodity ILIKE $%d)",
