@@ -52,7 +52,7 @@ func parseYear(w http.ResponseWriter, r *http.Request, defaultYear int) (int, bo
 //   - type_gs   (optional: Goods|Services|Total)
 func SummaryAPIHandler(querier db.KPIQuerier) http.HandlerFunc {
 	if querier == nil {
-		return func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, _ *http.Request) {
 			http.Error(w, "database not available", http.StatusServiceUnavailable)
 		}
 	}
@@ -100,7 +100,7 @@ func SummaryAPIHandler(querier db.KPIQuerier) http.HandlerFunc {
 //   - type_gs   (optional: Goods|Services|Total)
 func TimeSeriesAPIHandler(querier db.ChartQuerier) http.HandlerFunc {
 	if querier == nil {
-		return func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, _ *http.Request) {
 			http.Error(w, "database not available", http.StatusServiceUnavailable)
 		}
 	}
@@ -144,7 +144,7 @@ const defaultTablePageSize = 25
 //   - type_gs   (optional: Goods|Services|Total)
 func TableAPIHandler(querier db.TableQuerier) http.HandlerFunc {
 	if querier == nil {
-		return func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, _ *http.Request) {
 			http.Error(w, "database not available", http.StatusServiceUnavailable)
 		}
 	}
@@ -202,7 +202,7 @@ func TableAPIHandler(querier db.TableQuerier) http.HandlerFunc {
 //   - type_gs   (optional: Goods|Services|Total)
 func TreemapAPIHandler(querier db.ChartQuerier) http.HandlerFunc {
 	if querier == nil {
-		return func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, _ *http.Request) {
 			http.Error(w, "database not available", http.StatusServiceUnavailable)
 		}
 	}
