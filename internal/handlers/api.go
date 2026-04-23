@@ -128,6 +128,66 @@ func TimeSeriesAPIHandler(querier db.ChartQuerier) http.HandlerFunc {
 	}
 }
 
+// maxTablePageSize is the upper bound on the number of rows returned per page.
+const maxTablePageSize = 100
+
+// defaultTablePageSize is the default number of rows returned when no size is
+// specified.
+const defaultTablePageSize = 25
+
+// TableAPIHandler returns an http.HandlerFunc for GET /api/trade/table.
+//
+// Query parameters:
+//   - page (optional, default: 1; must be a positive integer)
+//   - size (optional, default: 25; capped at 100)
+//   - q    (optional, free-text search across country, type_ie, type_gs, commodity)
+func TableAPIHandler(querier db.TableQuerier) http.HandlerFunc {
+	if querier == nil {
+		return func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "database not available", http.StatusServiceUnavailable)
+		}
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+
+		// Parse page.
+		page := 1
+		if s := q.Get("page"); s != "" {
+			p, err := strconv.Atoi(s)
+			if err != nil || p < 1 {
+				http.Error(w, "invalid page parameter", http.StatusBadRequest)
+				return
+			}
+			page = p
+		}
+
+		// Parse size.
+		size := defaultTablePageSize
+		if s := q.Get("size"); s != "" {
+			sz, err := strconv.Atoi(s)
+			if err != nil || sz < 1 {
+				http.Error(w, "invalid size parameter", http.StatusBadRequest)
+				return
+			}
+			if sz > maxTablePageSize {
+				sz = maxTablePageSize
+			}
+			size = sz
+		}
+
+		search := q.Get("q")
+
+		result, err := querier.GetTablePage(r.Context(), page, size, search)
+		if err != nil {
+			http.Error(w, "failed to load table data", http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, result)
+	}
+}
+
 // TreemapAPIHandler returns an http.HandlerFunc for GET /api/trade/treemap.
 //
 // Query parameters:
