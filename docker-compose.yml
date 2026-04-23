@@ -15,12 +15,27 @@ services:
       timeout: 5s
       retries: 10
 
+  migrate:
+    build:
+      context: .
+      target: migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://go2shiny:go2shiny@db:5432/go2shiny?sslmode=disable
+    # Use shell form so $DATABASE_URL is expanded at runtime.
+    entrypoint: ["sh", "-c", "goose -dir /migrations postgres $$DATABASE_URL up"]
+    restart: on-failure
+
   app:
     build: .
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     env_file:
       - .env
     environment:
