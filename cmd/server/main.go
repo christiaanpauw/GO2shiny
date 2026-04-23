@@ -47,8 +47,10 @@ os.Exit(1)
 }
 
 // Optionally connect to the database. The server starts even if no
-// DATABASE_URL is provided; KPI endpoints will return 503 in that case.
+// DATABASE_URL is provided; KPI and chart endpoints will return 503 in
+// that case.
 var querier db.KPIQuerier
+var chartQuerier db.ChartQuerier
 if cfg.DatabaseURL != "" {
 dbCtx, dbCancel := context.WithTimeout(context.Background(), 30*time.Second)
 pool, dbErr := db.Open(dbCtx, cfg.DatabaseURL)
@@ -59,9 +61,11 @@ os.Exit(1)
 }
 defer pool.Close()
 slog.Info("database connected")
-querier = &db.PoolQuerier{Pool: pool}
+pq := &db.PoolQuerier{Pool: pool}
+querier = pq
+chartQuerier = pq
 } else {
-slog.Warn("DATABASE_URL not set; KPI endpoints will return 503")
+slog.Warn("DATABASE_URL not set; KPI and chart endpoints will return 503")
 }
 
 // Build the Chi router with standard middleware.
@@ -86,6 +90,9 @@ querier,
 tmpl,
 time.Duration(cfg.CacheTTLSeconds)*time.Second,
 ))
+r.Get("/api/trade/summary", handlers.SummaryAPIHandler(querier))
+r.Get("/api/trade/timeseries", handlers.TimeSeriesAPIHandler(chartQuerier))
+r.Get("/api/trade/treemap", handlers.TreemapAPIHandler(chartQuerier))
 
 addr := ":" + cfg.Port
 srv := &http.Server{

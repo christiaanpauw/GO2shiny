@@ -1,10 +1,9 @@
 {{define "content"}}
+{{/* KPI value-boxes — skeleton shown until HTMX swaps in real data */}}
 <div class="row row-cards"
      hx-get="/partials/kpis?year={{.Year}}"
      hx-trigger="load"
      hx-swap="outerHTML">
-
-  {{/* Skeleton cards shown until HTMX replaces this block with real KPI data */}}
 
   <div class="col-sm-6 col-lg-3">
     <div class="card card-sm placeholder-glow">
@@ -71,4 +70,37 @@
   </div>
 
 </div>
+
+{{/* Time-series line chart — Exports vs Imports over all available years */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Annual Trade Values</h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-timeseries" style="height:350px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{/* Treemap chart — top commodity groups for the selected year */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Top Commodity Groups ({{.Year}})</h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-treemap" style="height:400px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  initTimeSeries('chart-timeseries', '/api/trade/timeseries');
+  initTreemap('chart-treemap', '/api/trade/treemap?year={{.Year}}&direction=Exports');
+</script>
 {{end}}

@@ -14,7 +14,7 @@ This document breaks the rebuild into ten sequential phases. Each phase has a cl
 - [x] **Phase 1 – Skeleton server**
 - [x] **Phase 2 – Database & migrations**
 - [x] **Phase 3 – KPI value-boxes**
-- [ ] **Phase 4 – Charts**
+- [x] **Phase 4 – Charts**
 - [ ] **Phase 5 – Data tables**
 - [ ] **Phase 6 – Sidebar filters**
 - [ ] **Phase 7 – Market Intelligence tab**
@@ -147,18 +147,18 @@ F-03, F-04, F-05, NF-02, NF-04
 
 ### Tasks
 
-- [ ] `internal/db/queries_chart.go` — queries for time-series and treemap data.
-- [ ] `internal/handlers/api.go` — `GET /api/trade/summary`, `GET /api/trade/timeseries`, `GET /api/trade/treemap`.
-- [ ] `web/static/js/charts.js` — ECharts initialisation: `initTimeSeries(divId, apiUrl)`, `initTreemap(divId, apiUrl)`.
-- [ ] `web/templates/dashboard.html` — add two chart container `<div>`s wired to `charts.js`.
-- [ ] GZIP middleware enabled for JSON API responses.
+- [x] `internal/db/queries_chart.go` — queries for time-series and treemap data.
+- [x] `internal/handlers/api.go` — `GET /api/trade/summary`, `GET /api/trade/timeseries`, `GET /api/trade/treemap`.
+- [x] `web/static/js/charts.js` — ECharts initialisation: `initTimeSeries(divId, apiUrl)`, `initTreemap(divId, apiUrl)`.
+- [x] `web/templates/dashboard.html` — add two chart container `<div>`s wired to `charts.js`.
+- [x] GZIP middleware enabled for JSON API responses.
 
 ### Tests
 
-- [ ] `TestSummaryAPI` — returns correct JSON schema and numeric values.
-- [ ] `TestTimeSeriesAPI` — filters by `year_from`/`year_to` correctly.
-- [ ] `TestTreemapAPI` — returns hierarchical `name`/`children`/`value` structure.
-- [ ] `TestAPIGZIP` — `Accept-Encoding: gzip` response is compressed.
+- [x] `TestSummaryAPI` — returns correct JSON schema and numeric values.
+- [x] `TestTimeSeriesAPI` — filters by `year_from`/`year_to` correctly.
+- [x] `TestTreemapAPI` — returns hierarchical `name`/`children`/`value` structure.
+- [x] `TestAPIGZIP` — `Accept-Encoding: gzip` response is compressed.
 
 ### Exit Criterion
 
