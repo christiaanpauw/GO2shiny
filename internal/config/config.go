@@ -9,11 +9,11 @@ import (
 
 // Config holds all runtime configuration values.
 type Config struct {
-	DatabaseURL      string
-	Port             string
-	LogLevel         slog.Level
-	MaxDBConns       int
-	CacheTTLSeconds  int
+	DatabaseURL     string
+	Port            string
+	LogLevel        slog.Level
+	MaxDBConns      int
+	CacheTTLSeconds int
 }
 
 // Load reads configuration from environment variables, applying defaults where needed.
