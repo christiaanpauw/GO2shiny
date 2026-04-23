@@ -1,26 +1,39 @@
 /* NZ Trade Intelligence Dashboard — Tabulator data-table helpers */
 
 /**
- * initTradeTable initialises a Tabulator remote-pagination table and wires up
- * a CSV download button and a debounced search input.
+ * initTradeTable initialises a Tabulator remote-pagination table with filter params,
+ * and wires up a CSV download button and a debounced search input.
  *
  * @param {string} tableId        - The id of the container element.
  * @param {string} apiUrl         - Base URL of the paginated table JSON endpoint.
  * @param {string} downloadBtnId  - The id of the CSV download button.
  * @param {string} searchInputId  - The id of the search text input.
+ * @param {string|number} yearFrom
+ * @param {string|number} yearTo
+ * @param {string} typeIE         - Direction filter.
+ * @param {string} typeGS         - Type filter.
  * @returns {Tabulator|null}
  */
-function initTradeTable(tableId, apiUrl, downloadBtnId, searchInputId) {
+function initTradeTable(tableId, apiUrl, downloadBtnId, searchInputId, yearFrom, yearTo, typeIE, typeGS) {
     const el = document.getElementById(tableId);
     if (!el) return null;
 
     let currentSearch = '';
+
+    // Destroy previous Tabulator instance if present.
+    if (el._tabulator) {
+        el._tabulator.destroy();
+    }
 
     const table = new Tabulator('#' + tableId, {
         ajaxURL: apiUrl,
         ajaxParams: function() {
             const params = { page: table.getPage(), size: table.getPageSize() };
             if (currentSearch) params.q = currentSearch;
+            if (yearFrom) params.year_from = yearFrom;
+            if (yearTo)   params.year_to   = yearTo;
+            if (typeIE)   params.type_ie   = typeIE;
+            if (typeGS)   params.type_gs   = typeGS;
             return params;
         },
         ajaxResponse: function(_url, _params, response) {
@@ -52,6 +65,8 @@ function initTradeTable(tableId, apiUrl, downloadBtnId, searchInputId) {
             },
         ],
     });
+
+    el._tabulator = table;
 
     // CSV download button.
     const downloadBtn = document.getElementById(downloadBtnId);

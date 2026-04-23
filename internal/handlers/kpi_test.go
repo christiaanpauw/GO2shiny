@@ -20,10 +20,10 @@ type mockKPIQuerier struct {
 	err       error
 }
 
-func (m *mockKPIQuerier) GetKPISummary(_ context.Context, year int) (db.KPISummary, error) {
+func (m *mockKPIQuerier) GetKPISummary(_ context.Context, yearFrom, yearTo int, typeIE, typeGS string) (db.KPISummary, error) {
 	m.callCount++
 	s := m.summary
-	s.Year = year
+	s.Year = yearTo
 	return s, m.err
 }
 
@@ -38,7 +38,7 @@ func kpiTestTmpl() *template.Template {
 	return template.Must(template.New("kpi_cards").Parse(src))
 }
 
-// TestKPIEndpoint verifies that GET /partials/kpis?year=2023 returns 200 OK
+// TestKPIEndpoint verifies that GET /partials/kpis returns 200 OK
 // with the expected HTML structure and NZD-formatted values.
 func TestKPIEndpoint(t *testing.T) {
 	mock := &mockKPIQuerier{
@@ -51,7 +51,7 @@ func TestKPIEndpoint(t *testing.T) {
 	}
 
 	h := handlers.KPIHandler(mock, kpiTestTmpl(), time.Minute)
-	req := httptest.NewRequest(http.MethodGet, "/partials/kpis?year=2023", nil)
+	req := httptest.NewRequest(http.MethodGet, "/partials/kpis?year_from=2020&year_to=2023", nil)
 	w := httptest.NewRecorder()
 
 	h(w, req)
@@ -75,7 +75,7 @@ func TestKPIEndpoint(t *testing.T) {
 	}
 }
 
-// TestKPIEndpointInvalidParams verifies that missing or invalid year values
+// TestKPIEndpointInvalidParams verifies that invalid filter parameter values
 // cause the handler to return 400 Bad Request.
 func TestKPIEndpointInvalidParams(t *testing.T) {
 	mock := &mockKPIQuerier{}
@@ -85,10 +85,14 @@ func TestKPIEndpointInvalidParams(t *testing.T) {
 		name string
 		url  string
 	}{
-		{"missing year", "/partials/kpis"},
-		{"non-numeric year", "/partials/kpis?year=abc"},
-		{"year too low", "/partials/kpis?year=1800"},
-		{"year too high", "/partials/kpis?year=99999"},
+		{"non-numeric year_from", "/partials/kpis?year_from=abc"},
+		{"year_from too low", "/partials/kpis?year_from=1800"},
+		{"year_from too high", "/partials/kpis?year_from=99999"},
+		{"non-numeric year_to", "/partials/kpis?year_to=xyz"},
+		{"year_to too high", "/partials/kpis?year_to=99999"},
+		{"year_from > year_to", "/partials/kpis?year_from=2023&year_to=2020"},
+		{"invalid type_ie", "/partials/kpis?type_ie=invalid"},
+		{"invalid type_gs", "/partials/kpis?type_gs=invalid"},
 	}
 
 	for _, tc := range cases {
@@ -103,8 +107,8 @@ func TestKPIEndpointInvalidParams(t *testing.T) {
 	}
 }
 
-// TestKPICache verifies that a second request for the same year within the
-// cache TTL does not trigger a second database call.
+// TestKPICache verifies that a second request with the same filter params within
+// the cache TTL does not trigger a second database call.
 func TestKPICache(t *testing.T) {
 	mock := &mockKPIQuerier{
 		summary: db.KPISummary{TotalExports: 1_000, TotalImports: 800},
@@ -113,7 +117,7 @@ func TestKPICache(t *testing.T) {
 	h := handlers.KPIHandler(mock, kpiTestTmpl(), time.Minute)
 
 	for i := 0; i < 2; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/partials/kpis?year=2023", nil)
+		req := httptest.NewRequest(http.MethodGet, "/partials/kpis?year_from=2020&year_to=2023", nil)
 		w := httptest.NewRecorder()
 		h(w, req)
 		if w.Code != http.StatusOK {

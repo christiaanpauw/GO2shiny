@@ -1,8 +1,9 @@
 {{define "content"}}
 {{/* KPI value-boxes — skeleton shown until HTMX swaps in real data */}}
 <div class="row row-cards"
-     hx-get="/partials/kpis?year={{.Year}}"
-     hx-trigger="load"
+     hx-get="/partials/kpis"
+     hx-trigger="load, filter-changed from:document"
+     hx-include="#filter-form"
      hx-swap="outerHTML">
 
   <div class="col-sm-6 col-lg-3">
@@ -100,8 +101,26 @@
 </div>
 
 <script>
-  initTimeSeries('chart-timeseries', '/api/trade/timeseries');
-  initTreemap('chart-treemap', '/api/trade/treemap?year={{.Year}}&direction=Exports');
+  (function() {
+    const p = new URLSearchParams(window.location.search);
+    const yearFrom = p.get('year_from') || '1990';
+    const yearTo   = p.get('year_to')   || String(new Date().getFullYear());
+    const typeIE   = p.get('type_ie')   || '';
+    const typeGS   = p.get('type_gs')   || '';
+
+    initTimeSeries('chart-timeseries', '/api/trade/timeseries', yearFrom, yearTo, typeIE, typeGS);
+    initTreemap('chart-treemap', '/api/trade/treemap', yearTo, typeIE, typeGS);
+    initTradeTable('trade-table', '/api/trade/table', 'btn-download-csv', 'table-search', yearFrom, yearTo, typeIE, typeGS);
+  })();
+</script>
+
+<script>
+  document.addEventListener('filter-changed', function(e) {
+    var d = e.detail;
+    initTimeSeries('chart-timeseries', '/api/trade/timeseries', d.year_from, d.year_to, d.type_ie, d.type_gs);
+    initTreemap('chart-treemap', '/api/trade/treemap', d.year_to, d.type_ie, d.type_gs);
+    initTradeTable('trade-table', '/api/trade/table', 'btn-download-csv', 'table-search', d.year_from, d.year_to, d.type_ie, d.type_gs);
+  });
 </script>
 
 {{template "table_block" .}}

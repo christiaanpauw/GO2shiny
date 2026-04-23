@@ -23,13 +23,13 @@ type TreemapNode struct {
 
 // ChartQuerier is the interface required by the chart API handlers.
 type ChartQuerier interface {
-	GetTimeSeries(ctx context.Context, yearFrom, yearTo int) ([]TimeSeriesPoint, error)
-	GetTreemap(ctx context.Context, year int, direction string) (TreemapNode, error)
+	GetTimeSeries(ctx context.Context, yearFrom, yearTo int, typeIE, typeGS string) ([]TimeSeriesPoint, error)
+	GetTreemap(ctx context.Context, year int, direction string, typeGS string) (TreemapNode, error)
 }
 
 // GetTimeSeries returns annual export and import totals for every year in
-// [yearFrom, yearTo], ordered by year ascending.
-func (q *PoolQuerier) GetTimeSeries(ctx context.Context, yearFrom, yearTo int) ([]TimeSeriesPoint, error) {
+// [yearFrom, yearTo], ordered by year ascending, filtered by typeIE and typeGS.
+func (q *PoolQuerier) GetTimeSeries(ctx context.Context, yearFrom, yearTo int, typeIE, typeGS string) ([]TimeSeriesPoint, error) {
 	const query = `
 		SELECT
 			year,
@@ -37,11 +37,13 @@ func (q *PoolQuerier) GetTimeSeries(ctx context.Context, yearFrom, yearTo int) (
 			SUM(CASE WHEN type_ie = 'Imports' THEN value_nzd ELSE 0 END) AS imports
 		FROM trade_flows
 		WHERE year BETWEEN $1 AND $2
+		  AND ($3 = '' OR $3 = 'Both' OR type_ie = $3)
+		  AND ($4 = '' OR $4 = 'Total' OR type_gs = $4)
 		GROUP BY year
 		ORDER BY year
 	`
 
-	rows, err := q.Pool.Query(ctx, query, yearFrom, yearTo)
+	rows, err := q.Pool.Query(ctx, query, yearFrom, yearTo, typeIE, typeGS)
 	if err != nil {
 		return nil, fmt.Errorf("query time series: %w", err)
 	}
@@ -63,19 +65,20 @@ func (q *PoolQuerier) GetTimeSeries(ctx context.Context, yearFrom, yearTo int) (
 }
 
 // GetTreemap returns the top commodity groups for the given year and trade
-// direction ("Exports" or "Imports"), structured as a root TreemapNode whose
-// Children are the individual commodity leaves ordered by value descending.
-func (q *PoolQuerier) GetTreemap(ctx context.Context, year int, direction string) (TreemapNode, error) {
+// direction ("Exports" or "Imports"), filtered by typeGS, structured as a root
+// TreemapNode whose Children are the individual commodity leaves ordered by value descending.
+func (q *PoolQuerier) GetTreemap(ctx context.Context, year int, direction string, typeGS string) (TreemapNode, error) {
 	const query = `
 		SELECT COALESCE(commodity, 'Other') AS name, SUM(value_nzd) AS value
 		FROM trade_flows
 		WHERE year = $1 AND type_ie = $2
+		  AND ($3 = '' OR $3 = 'Total' OR type_gs = $3)
 		GROUP BY commodity
 		ORDER BY value DESC
 		LIMIT 20
 	`
 
-	rows, err := q.Pool.Query(ctx, query, year, direction)
+	rows, err := q.Pool.Query(ctx, query, year, direction, typeGS)
 	if err != nil {
 		return TreemapNode{}, fmt.Errorf("query treemap: %w", err)
 	}
