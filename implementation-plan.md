@@ -13,7 +13,7 @@ This document breaks the rebuild into ten sequential phases. Each phase has a cl
 - [x] **Phase 0 – Repository & CI bootstrap**
 - [x] **Phase 1 – Skeleton server**
 - [x] **Phase 2 – Database & migrations**
-- [ ] **Phase 3 – KPI value-boxes**
+- [x] **Phase 3 – KPI value-boxes**
 - [ ] **Phase 4 – Charts**
 - [ ] **Phase 5 – Data tables**
 - [ ] **Phase 6 – Sidebar filters**
@@ -100,7 +100,7 @@ F-60, F-61, NF-21, NF-33
 ### Tests
 
 - [x] `TestMigrationsApply` — applies migrations against a test DB (build tag: `integration`).
-- [ ] `TestImportCSV` — imports the sample dataset and verifies row counts.
+- [x] `TestImportCSV` — imports the sample dataset and verifies row counts.
 - [x] `TestPoolPingFails` — pool startup fails fast when `DATABASE_URL` points to an unreachable host.
 
 ### Exit Criterion
@@ -119,17 +119,17 @@ F-01, F-02, NF-01, NF-02
 
 ### Tasks
 
-- [ ] `internal/db/queries_kpi.go` — SQL query: annual totals grouped by `type_ie` and `type_gs`.
-- [ ] `internal/handlers/dashboard.go` — `GET /partials/kpis` returns the KPI HTML partial.
-- [ ] `web/templates/partials/kpi_cards.html` — four Tabler stat-card tiles.
-- [ ] `web/templates/dashboard.html` — main content block with `hx-get="/partials/kpis"` and skeleton animation.
-- [ ] In-memory cache for KPI query results (TTL from `$CACHE_TTL_SECONDS`).
+- [x] `internal/db/queries_kpi.go` — SQL query: annual totals grouped by `type_ie` and `type_gs`.
+- [x] `internal/handlers/dashboard.go` — `GET /partials/kpis` returns the KPI HTML partial.
+- [x] `web/templates/partials/kpi_cards.html` — four Tabler stat-card tiles.
+- [x] `web/templates/dashboard.html` — main content block with `hx-get="/partials/kpis"` and skeleton animation.
+- [x] In-memory cache for KPI query results (TTL from `$CACHE_TTL_SECONDS`).
 
 ### Tests
 
-- [ ] `TestKPIEndpoint` — GET `/partials/kpis` with valid params returns 200 + correct HTML structure.
-- [ ] `TestKPIEndpointInvalidParams` — missing/invalid year returns 400.
-- [ ] `TestKPICache` — second call within TTL does not hit the DB.
+- [x] `TestKPIEndpoint` — GET `/partials/kpis` with valid params returns 200 + correct HTML structure.
+- [x] `TestKPIEndpointInvalidParams` — missing/invalid year returns 400.
+- [x] `TestKPICache` — second call within TTL does not hit the DB.
 
 ### Exit Criterion
 

@@ -1,0 +1,117 @@
+{{define "kpi_cards"}}
+<div class="row row-cards">
+
+  {{/* Total Exports */}}
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <span class="bg-green text-white avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                   stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M5 12l14 0"/>
+                <path d="M15 16l4 -4l-4 -4"/>
+              </svg>
+            </span>
+          </div>
+          <div class="col">
+            <div class="font-weight-medium">Total Exports</div>
+            <div class="text-muted">{{.TotalExports}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{/* Total Imports */}}
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <span class="bg-red text-white avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                   stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M5 12l14 0"/>
+                <path d="M9 8l-4 4l4 4"/>
+              </svg>
+            </span>
+          </div>
+          <div class="col">
+            <div class="font-weight-medium">Total Imports</div>
+            <div class="text-muted">{{.TotalImports}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{/* Trade Balance */}}
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            {{if .TradeBalancePositive}}
+            <span class="bg-azure text-white avatar">
+            {{else}}
+            <span class="bg-orange text-white avatar">
+            {{end}}
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                   stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0 -18"/>
+                <path d="M3.6 9h16.8"/>
+                <path d="M3.6 15h16.8"/>
+                <path d="M11.5 3a17 17 0 0 0 0 18"/>
+                <path d="M12.5 3a17 17 0 0 1 0 18"/>
+              </svg>
+            </span>
+          </div>
+          <div class="col">
+            <div class="font-weight-medium">Trade Balance</div>
+            <div class="text-muted">{{.TradeBalance}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{/* Year on Year Change */}}
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            {{if .YoYPositive}}
+            <span class="bg-green text-white avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                   stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M3 17l4 -4l4 4l4 -8l4 4"/>
+              </svg>
+            </span>
+            {{else}}
+            <span class="bg-red text-white avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                   stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M3 7l4 4l4 -4l4 8l4 -4"/>
+              </svg>
+            </span>
+            {{end}}
+          </div>
+          <div class="col">
+            <div class="font-weight-medium">Year on Year</div>
+            <div class="text-muted">{{.YoYChange}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{{end}}

@@ -6,6 +6,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/pressly/goose/v3 v3.24.3
+	golang.org/x/sync v0.14.0
 )
 
 require (
@@ -16,6 +17,5 @@ require (
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 )
