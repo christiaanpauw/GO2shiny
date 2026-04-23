@@ -6,7 +6,6 @@ import (
 "fmt"
 "html/template"
 "net/http"
-"strconv"
 "sync"
 "time"
 
@@ -17,14 +16,17 @@ import (
 
 // dashboardData holds the data passed to the dashboard template.
 type dashboardData struct {
-Year int
+Year     int
+YearFrom int
+YearTo   int
 }
 
 // Dashboard handles GET /dashboard and renders the base layout with the
 // dashboard content block. The actual KPI data loads asynchronously via HTMX.
 func Dashboard(tmpl *template.Template) http.HandlerFunc {
 return func(w http.ResponseWriter, r *http.Request) {
-data := dashboardData{Year: time.Now().Year()}
+now := time.Now().Year()
+data := dashboardData{Year: now, YearFrom: 1990, YearTo: now}
 w.Header().Set("Content-Type", "text/html; charset=utf-8")
 w.WriteHeader(http.StatusOK)
 if err := tmpl.ExecuteTemplate(w, "base.html", data); err != nil {
@@ -50,43 +52,44 @@ value     db.KPISummary
 expiresAt time.Time
 }
 
-// kpiCache is a TTL in-memory store for KPI summaries, keyed by year.
+// kpiCache is a TTL in-memory store for KPI summaries, keyed by a combined filter string.
 // A singleflight.Group prevents thundering-herd duplicate DB fetches when
 // the cache expires under concurrent load.
 type kpiCache struct {
 mu      sync.Mutex
-entries map[int]kpiCacheEntry
+entries map[string]kpiCacheEntry
 ttl     time.Duration
 sf      singleflight.Group
 }
 
 func newKPICache(ttl time.Duration) *kpiCache {
 return &kpiCache{
-entries: make(map[int]kpiCacheEntry),
+entries: make(map[string]kpiCacheEntry),
 ttl:     ttl,
 }
 }
 
-// getOrFetch returns a cached KPISummary for year if it is still valid;
+// getOrFetch returns a cached KPISummary for the given FilterParams if still valid;
 // otherwise it calls fetch exactly once (even under concurrent requests for
 // the same key), stores the result, and returns it.
 func (c *kpiCache) getOrFetch(
 ctx context.Context,
-year int,
-fetch func(context.Context, int) (db.KPISummary, error),
+fp FilterParams,
+fetch func(context.Context, int, int, string, string) (db.KPISummary, error),
 ) (db.KPISummary, error) {
+key := fmt.Sprintf("%d-%d-%s-%s", fp.YearFrom, fp.YearTo, fp.TypeIE, fp.TypeGS)
+
 c.mu.Lock()
-entry, ok := c.entries[year]
+entry, ok := c.entries[key]
 if ok && time.Now().Before(entry.expiresAt) {
 c.mu.Unlock()
 return entry.value, nil
 }
 c.mu.Unlock()
 
-// Coalesce concurrent fetches for the same year into a single DB call.
-key := strconv.Itoa(year)
+// Coalesce concurrent fetches for the same filter key into a single DB call.
 v, err, _ := c.sf.Do(key, func() (any, error) {
-return fetch(ctx, year)
+return fetch(ctx, fp.YearFrom, fp.YearTo, fp.TypeIE, fp.TypeGS)
 })
 if err != nil {
 return db.KPISummary{}, err
@@ -102,7 +105,7 @@ if now.After(e.expiresAt) {
 delete(c.entries, k)
 }
 }
-c.entries[year] = kpiCacheEntry{value: val, expiresAt: now.Add(c.ttl)}
+c.entries[key] = kpiCacheEntry{value: val, expiresAt: now.Add(c.ttl)}
 c.mu.Unlock()
 
 return val, nil
@@ -110,8 +113,8 @@ return val, nil
 
 // KPIHandler returns an http.HandlerFunc for GET /partials/kpis.
 //
-// The handler requires a "year" query parameter (integer, 1900–9999). It uses
-// an in-memory cache with the given TTL to avoid repeated DB round-trips.
+// Filter parameters (all optional): year_from, year_to, type_ie, type_gs.
+// Results are cached per unique filter combination using the given TTL.
 // If querier is nil the handler responds with 503 Service Unavailable.
 func KPIHandler(querier db.KPIQuerier, tmpl *template.Template, ttl time.Duration) http.HandlerFunc {
 if querier == nil {
@@ -123,19 +126,12 @@ http.Error(w, "database not available", http.StatusServiceUnavailable)
 cache := newKPICache(ttl)
 
 return func(w http.ResponseWriter, r *http.Request) {
-yearStr := r.URL.Query().Get("year")
-if yearStr == "" {
-http.Error(w, "year parameter required", http.StatusBadRequest)
+fp, ok := parseFilterParams(w, r)
+if !ok {
 return
 }
 
-year, err := strconv.Atoi(yearStr)
-if err != nil || year < 1900 || year > 9999 {
-http.Error(w, "invalid year parameter", http.StatusBadRequest)
-return
-}
-
-summary, err := cache.getOrFetch(r.Context(), year, querier.GetKPISummary)
+summary, err := cache.getOrFetch(r.Context(), fp, querier.GetKPISummary)
 if err != nil {
 http.Error(w, "failed to load KPI data", http.StatusInternalServerError)
 return

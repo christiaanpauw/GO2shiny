@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6/dist/css/tabulator_bootstrap5.min.css"/>
   <!-- Custom overrides -->
   <link rel="stylesheet" href="/static/css/app.css"/>
+  <!-- Alpine.js (filter state) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 </head>
 <body class="antialiased">
   <div class="wrapper">
@@ -71,6 +73,61 @@
               </a>
             </li>
           </ul>
+
+          <!-- Sidebar filters -->
+          <div class="mt-3" id="sidebar-filters"
+               x-data="filterState()"
+               x-init="initFromURL()">
+
+            <h6 class="navbar-heading text-muted text-uppercase px-0">Filters</h6>
+
+            <!-- Hidden form fields included by HTMX hx-include -->
+            <form id="filter-form" style="display:none">
+              <input type="hidden" name="year_from" :value="yearFrom">
+              <input type="hidden" name="year_to"   :value="yearTo">
+              <input type="hidden" name="type_ie"   :value="typeIE">
+              <input type="hidden" name="type_gs"   :value="typeGS">
+            </form>
+
+            <!-- Year From -->
+            <div class="mb-2">
+              <label class="form-label text-white-50 small mb-1">Year From</label>
+              <input type="number" class="form-control form-control-sm"
+                     x-model.number="yearFrom" min="1990" :max="yearTo"
+                     @change="onFilterChange()">
+            </div>
+
+            <!-- Year To -->
+            <div class="mb-2">
+              <label class="form-label text-white-50 small mb-1">Year To</label>
+              <input type="number" class="form-control form-control-sm"
+                     x-model.number="yearTo" :min="yearFrom" max="2099"
+                     @change="onFilterChange()">
+            </div>
+
+            <!-- Direction -->
+            <div class="mb-2">
+              <label class="form-label text-white-50 small mb-1">Direction</label>
+              <select class="form-select form-select-sm"
+                      x-model="typeIE" @change="onFilterChange()">
+                <option value="">Both</option>
+                <option value="Exports">Exports</option>
+                <option value="Imports">Imports</option>
+              </select>
+            </div>
+
+            <!-- Type -->
+            <div class="mb-2">
+              <label class="form-label text-white-50 small mb-1">Type</label>
+              <select class="form-select form-select-sm"
+                      x-model="typeGS" @change="onFilterChange()">
+                <option value="">Total</option>
+                <option value="Goods">Goods</option>
+                <option value="Services">Services</option>
+              </select>
+            </div>
+
+          </div>
         </div>
       </div>
     </aside>
@@ -128,5 +185,46 @@
   <script src="/static/js/charts.js"></script>
   <!-- Custom table helpers -->
   <script src="/static/js/tables.js"></script>
+  <!-- Alpine.js filter state -->
+  <script>
+  function filterState() {
+    return {
+      yearFrom: 1990,
+      yearTo:   new Date().getFullYear(),
+      typeIE:   '',
+      typeGS:   '',
+
+      initFromURL() {
+        const p = new URLSearchParams(window.location.search);
+        if (p.get('year_from')) this.yearFrom = parseInt(p.get('year_from'));
+        if (p.get('year_to'))   this.yearTo   = parseInt(p.get('year_to'));
+        if (p.get('type_ie'))   this.typeIE   = p.get('type_ie');
+        if (p.get('type_gs'))   this.typeGS   = p.get('type_gs');
+      },
+
+      onFilterChange() {
+        const p = new URLSearchParams();
+        p.set('year_from', this.yearFrom);
+        p.set('year_to',   this.yearTo);
+        if (this.typeIE) p.set('type_ie', this.typeIE);
+        if (this.typeGS) p.set('type_gs', this.typeGS);
+        history.pushState({}, '', '?' + p.toString());
+
+        document.dispatchEvent(new CustomEvent('filter-changed', {
+          detail: {
+            year_from: this.yearFrom,
+            year_to:   this.yearTo,
+            type_ie:   this.typeIE,
+            type_gs:   this.typeGS,
+          }
+        }));
+
+        document.querySelectorAll('[hx-include="#filter-form"]').forEach(function(el) {
+          if (window.htmx) htmx.trigger(el, 'filter-changed');
+        });
+      },
+    };
+  }
+  </script>
 </body>
 </html>

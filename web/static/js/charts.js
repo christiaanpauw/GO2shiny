@@ -36,19 +36,32 @@ function initPieChart(elementId, options) {
 }
 
 /**
- * initTimeSeries fetches JSON from apiUrl and renders a time-series line chart
- * (exports vs imports) inside the given container element.
+ * initTimeSeries fetches JSON from baseUrl (with filter params) and renders a
+ * time-series line chart (exports vs imports) inside the given container.
  *
- * The API must return an array of objects with the shape:
- *   { year: number, exports: number, imports: number }
- *
- * @param {string} divId  - The id of the container element.
- * @param {string} apiUrl - URL of the time-series JSON endpoint.
+ * @param {string} divId    - The id of the container element.
+ * @param {string} baseUrl  - Base URL of the time-series JSON endpoint.
+ * @param {string|number} yearFrom
+ * @param {string|number} yearTo
+ * @param {string} typeIE   - Direction filter ("Exports", "Imports", "Both", or "").
+ * @param {string} typeGS   - Type filter ("Goods", "Services", "Total", or "").
  * @returns {Promise<echarts.ECharts|null>}
  */
-async function initTimeSeries(divId, apiUrl) {
+async function initTimeSeries(divId, baseUrl, yearFrom, yearTo, typeIE, typeGS) {
     const el = document.getElementById(divId);
     if (!el) return null;
+
+    // Build URL with filter params.
+    const params = new URLSearchParams();
+    if (yearFrom != null) params.set('year_from', yearFrom);
+    if (yearTo   != null) params.set('year_to',   yearTo);
+    if (typeIE)           params.set('type_ie',   typeIE);
+    if (typeGS)           params.set('type_gs',   typeGS);
+    const apiUrl = baseUrl + (params.toString() ? '?' + params.toString() : '');
+
+    // Dispose previous chart instance if present.
+    const existing = echarts.getInstanceByDom(el);
+    if (existing) existing.dispose();
 
     const chart = echarts.init(el);
     chart.showLoading();
@@ -85,19 +98,31 @@ async function initTimeSeries(divId, apiUrl) {
 }
 
 /**
- * initTreemap fetches JSON from apiUrl and renders an ECharts treemap inside
- * the given container element.
+ * initTreemap fetches JSON from baseUrl (with filter params) and renders an
+ * ECharts treemap inside the given container element.
  *
- * The API must return an object with the shape:
- *   { name: string, children: [{ name: string, value: number }, ...] }
- *
- * @param {string} divId  - The id of the container element.
- * @param {string} apiUrl - URL of the treemap JSON endpoint.
+ * @param {string} divId   - The id of the container element.
+ * @param {string} baseUrl - Base URL of the treemap JSON endpoint.
+ * @param {string|number} year
+ * @param {string} typeIE  - Direction filter; Imports → Imports, otherwise Exports.
+ * @param {string} typeGS  - Type filter ("Goods", "Services", "Total", or "").
  * @returns {Promise<echarts.ECharts|null>}
  */
-async function initTreemap(divId, apiUrl) {
+async function initTreemap(divId, baseUrl, year, typeIE, typeGS) {
     const el = document.getElementById(divId);
     if (!el) return null;
+
+    const params = new URLSearchParams();
+    if (year != null) params.set('year', year);
+    // Map typeIE to the treemap direction (single direction required).
+    const direction = (typeIE === 'Imports') ? 'Imports' : 'Exports';
+    params.set('direction', direction);
+    if (typeGS) params.set('type_gs', typeGS);
+    const apiUrl = baseUrl + (params.toString() ? '?' + params.toString() : '');
+
+    // Dispose previous chart instance if present.
+    const existing = echarts.getInstanceByDom(el);
+    if (existing) existing.dispose();
 
     const chart = echarts.init(el);
     chart.showLoading();

@@ -17,7 +17,7 @@ type mockTableQuerier struct {
 	err  error
 }
 
-func (m *mockTableQuerier) GetTablePage(_ context.Context, page, size int, q string) (db.TablePage, error) {
+func (m *mockTableQuerier) GetTablePage(_ context.Context, page, size int, q, typeIE, typeGS string, yearFrom, yearTo int) (db.TablePage, error) {
 	if m.err != nil {
 		return db.TablePage{}, m.err
 	}

@@ -22,7 +22,7 @@ type mockChartQuerier struct {
 	err        error
 }
 
-func (m *mockChartQuerier) GetTimeSeries(_ context.Context, yearFrom, yearTo int) ([]db.TimeSeriesPoint, error) {
+func (m *mockChartQuerier) GetTimeSeries(_ context.Context, yearFrom, yearTo int, typeIE, typeGS string) ([]db.TimeSeriesPoint, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -35,7 +35,7 @@ func (m *mockChartQuerier) GetTimeSeries(_ context.Context, yearFrom, yearTo int
 	return pts, nil
 }
 
-func (m *mockChartQuerier) GetTreemap(_ context.Context, _ int, _ string) (db.TreemapNode, error) {
+func (m *mockChartQuerier) GetTreemap(_ context.Context, _ int, _ string, _ string) (db.TreemapNode, error) {
 	if m.err != nil {
 		return db.TreemapNode{}, m.err
 	}

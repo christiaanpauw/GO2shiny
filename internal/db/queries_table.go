@@ -27,68 +27,77 @@ type TablePage struct {
 
 // TableQuerier is the interface required by the table HTTP handler.
 type TableQuerier interface {
-	GetTablePage(ctx context.Context, page, size int, q string) (TablePage, error)
+	GetTablePage(ctx context.Context, page, size int, q, typeIE, typeGS string, yearFrom, yearTo int) (TablePage, error)
 }
 
 // GetTablePage returns a paginated, optionally filtered page of trade_flows rows.
-// If q is non-empty the results are filtered by a case-insensitive substring
-// match across country, type_ie, type_gs, and commodity columns.
+// Filtering supports year range, type_ie, type_gs, and free-text search (q).
 // The size parameter is expected to be already capped by the caller.
-func (pq *PoolQuerier) GetTablePage(ctx context.Context, page, size int, q string) (TablePage, error) {
+func (pq *PoolQuerier) GetTablePage(ctx context.Context, page, size int, q, typeIE, typeGS string, yearFrom, yearTo int) (TablePage, error) {
 	offset := (page - 1) * size
 
-	var (
-		countQuery string
-		dataQuery  string
-		args       []any
-	)
+	// Build dynamic WHERE clause.
+	var conds []string
+	var args []any
 
-	if q == "" {
-		countQuery = `SELECT COUNT(*) FROM trade_flows`
-		dataQuery = `
-			SELECT year, country, type_ie, type_gs, COALESCE(commodity, '') AS commodity, value_nzd
-			FROM trade_flows
-			ORDER BY year DESC, country, type_ie
-			LIMIT $1 OFFSET $2
-		`
-		args = []any{size, offset}
-	} else {
+	// Year range (always applied; defaults are 1990–now).
+	conds = append(conds, fmt.Sprintf("year BETWEEN $%d AND $%d", len(args)+1, len(args)+2))
+	args = append(args, yearFrom, yearTo)
+
+	// Direction filter.
+	if typeIE != "" && typeIE != "Both" {
+		conds = append(conds, fmt.Sprintf("type_ie = $%d", len(args)+1))
+		args = append(args, typeIE)
+	}
+
+	// Goods/services type filter.
+	if typeGS != "" && typeGS != "Total" {
+		conds = append(conds, fmt.Sprintf("type_gs = $%d", len(args)+1))
+		args = append(args, typeGS)
+	}
+
+	// Free-text search across key text columns.
+	if q != "" {
 		escaped := strings.ReplaceAll(q, `\`, `\\`)
 		escaped = strings.ReplaceAll(escaped, "_", `\_`)
 		escaped = strings.ReplaceAll(escaped, "%", `\%`)
 		pattern := "%" + escaped + "%"
-		countQuery = `
-			SELECT COUNT(*) FROM trade_flows
-			WHERE country ILIKE $1
-			   OR type_ie ILIKE $1
-			   OR type_gs ILIKE $1
-			   OR commodity ILIKE $1
-		`
-		dataQuery = `
-			SELECT year, country, type_ie, type_gs, COALESCE(commodity, '') AS commodity, value_nzd
-			FROM trade_flows
-			WHERE country ILIKE $1
-			   OR type_ie ILIKE $1
-			   OR type_gs ILIKE $1
-			   OR commodity ILIKE $1
-			ORDER BY year DESC, country, type_ie
-			LIMIT $2 OFFSET $3
-		`
-		args = []any{pattern, size, offset}
+		// The same parameter index is intentional: all four ILIKE conditions
+		// reference the single pattern argument appended below.
+		idx := len(args) + 1
+		conds = append(conds, fmt.Sprintf(
+			"(country ILIKE $%d OR type_ie ILIKE $%d OR type_gs ILIKE $%d OR commodity ILIKE $%d)",
+			idx, idx, idx, idx,
+		))
+		args = append(args, pattern)
 	}
+
+	whereClause := "WHERE " + strings.Join(conds, " AND ")
+	n := len(args)
+
+	countQuery := "SELECT COUNT(*) FROM trade_flows " + whereClause
+
+	dataQuery := fmt.Sprintf(`
+		SELECT year, country, type_ie, type_gs, COALESCE(commodity, '') AS commodity, value_nzd
+		FROM trade_flows
+		%s
+		ORDER BY year DESC, country, type_ie
+		LIMIT $%d OFFSET $%d
+	`, whereClause, n+1, n+2)
 
 	// Fetch total count.
 	var total int
-	var countArgs []any
-	if q != "" {
-		countArgs = []any{args[0]}
-	}
-	if err := pq.Pool.QueryRow(ctx, countQuery, countArgs...).Scan(&total); err != nil {
+	if err := pq.Pool.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
 		return TablePage{}, fmt.Errorf("count table rows: %w", err)
 	}
 
-	// Fetch page rows.
-	rows, err := pq.Pool.Query(ctx, dataQuery, args...)
+	// Fetch page rows (append LIMIT and OFFSET args).
+	dataArgs := make([]any, n+2)
+	copy(dataArgs, args)
+	dataArgs[n] = size
+	dataArgs[n+1] = offset
+
+	rows, err := pq.Pool.Query(ctx, dataQuery, dataArgs...)
 	if err != nil {
 		return TablePage{}, fmt.Errorf("query table rows: %w", err)
 	}

@@ -16,7 +16,7 @@ This document breaks the rebuild into ten sequential phases. Each phase has a cl
 - [x] **Phase 3 – KPI value-boxes**
 - [x] **Phase 4 – Charts**
 - [x] **Phase 5 – Data tables**
-- [ ] **Phase 6 – Sidebar filters**
+- [x] **Phase 6 – Sidebar filters**
 - [ ] **Phase 7 – Market Intelligence tab**
 - [ ] **Phase 8 – Commodity Intelligence tab**
 - [ ] **Phase 9 – Polish & UX hardening**
@@ -195,7 +195,7 @@ The dashboard table shows paginated rows, supports column sorting and text searc
 
 ---
 
-## Phase 6 – Sidebar filters
+## Phase 6 – Sidebar filters ✅
 
 **Goal:** Changing the sidebar filter controls updates all charts, KPIs, and tables on the page without a full reload.
 
@@ -205,17 +205,17 @@ F-40–F-45, NF-01
 
 ### Tasks
 
-- [ ] `web/templates/base.html` — sidebar filter form: year range, direction toggle, type selector.
-- [ ] Alpine.js wires filter state to a hidden form; HTMX `hx-include` sends params on every request.
-- [ ] URL query string updated on filter change (`history.pushState`) for shareability (F-45).
-- [ ] All existing partial/API endpoints validated to honour new filter params.
-- [ ] Allow-lists enforced for `type_ie`, `type_gs`, `region` (NF-10 / input validation).
+- [x] `web/templates/base.html` — sidebar filter form: year range, direction toggle, type selector.
+- [x] Alpine.js wires filter state to a hidden form; HTMX `hx-include` sends params on every request.
+- [x] URL query string updated on filter change (`history.pushState`) for shareability (F-45).
+- [x] All existing partial/API endpoints validated to honour new filter params.
+- [x] Allow-lists enforced for `type_ie`, `type_gs`, `region` (NF-10 / input validation).
 
 ### Tests
 
-- [ ] `TestFilterTypeIEAllowList` — invalid `type_ie` value returns 400.
-- [ ] `TestFilterYearRange` — `year_from` > `year_to` returns 400.
-- [ ] `TestFilterUpdatesKPIs` — KPI partial reflects different totals for different `year_from`/`year_to`.
+- [x] `TestFilterTypeIEAllowList` — invalid `type_ie` value returns 400.
+- [x] `TestFilterYearRange` — `year_from` > `year_to` returns 400.
+- [x] `TestFilterUpdatesKPIs` — KPI partial reflects different totals for different `year_from`/`year_to`.
 
 ### Exit Criterion
 
