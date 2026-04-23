@@ -42,4 +42,4 @@ services:
       # Override DATABASE_URL so it uses the Compose service name.
       DATABASE_URL: postgres://go2shiny:go2shiny@db:5432/go2shiny?sslmode=disable
     ports:
-      - "8080:8080"
+      - "8009:8080"
