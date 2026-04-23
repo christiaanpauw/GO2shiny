@@ -1,3 +1,15 @@
+# ── Migrate stage ─────────────────────────────────────────────────────────────
+# Installs the goose CLI and bundles the SQL migration files.
+# Used as a one-shot init container in docker-compose.yml.
+FROM golang:1.23-alpine AS migrate
+
+RUN go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
+
+COPY internal/db/migrations /migrations
+
+ENTRYPOINT ["goose", "-dir", "/migrations", "postgres"]
+CMD ["up"]
+
 # ── Build stage ──────────────────────────────────────────────────────────────
 FROM golang:1.23-alpine AS builder
 
