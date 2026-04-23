@@ -51,6 +51,7 @@ os.Exit(1)
 // that case.
 var querier db.KPIQuerier
 var chartQuerier db.ChartQuerier
+var tableQuerier db.TableQuerier
 if cfg.DatabaseURL != "" {
 dbCtx, dbCancel := context.WithTimeout(context.Background(), 30*time.Second)
 pool, dbErr := db.Open(dbCtx, cfg.DatabaseURL)
@@ -64,6 +65,7 @@ slog.Info("database connected")
 pq := &db.PoolQuerier{Pool: pool}
 querier = pq
 chartQuerier = pq
+tableQuerier = pq
 } else {
 slog.Warn("DATABASE_URL not set; KPI and chart endpoints will return 503")
 }
@@ -93,6 +95,7 @@ time.Duration(cfg.CacheTTLSeconds)*time.Second,
 r.Get("/api/trade/summary", handlers.SummaryAPIHandler(querier))
 r.Get("/api/trade/timeseries", handlers.TimeSeriesAPIHandler(chartQuerier))
 r.Get("/api/trade/treemap", handlers.TreemapAPIHandler(chartQuerier))
+r.Get("/api/trade/table", handlers.TableAPIHandler(tableQuerier))
 
 addr := ":" + cfg.Port
 srv := &http.Server{

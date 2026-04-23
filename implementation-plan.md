@@ -15,7 +15,7 @@ This document breaks the rebuild into ten sequential phases. Each phase has a cl
 - [x] **Phase 2 – Database & migrations**
 - [x] **Phase 3 – KPI value-boxes**
 - [x] **Phase 4 – Charts**
-- [ ] **Phase 5 – Data tables**
+- [x] **Phase 5 – Data tables**
 - [ ] **Phase 6 – Sidebar filters**
 - [ ] **Phase 7 – Market Intelligence tab**
 - [ ] **Phase 8 – Commodity Intelligence tab**
@@ -176,18 +176,18 @@ F-30, F-31, F-32, F-33, NF-02
 
 ### Tasks
 
-- [ ] `internal/db/queries_table.go` — paginated query with optional full-text search.
-- [ ] `internal/handlers/api.go` — `GET /api/trade/table` with `page`, `size`, `q` params.
-- [ ] `web/templates/partials/table_block.html` — Tabulator.js container div.
-- [ ] `web/static/js/charts.js` (or `tables.js`) — Tabulator initialisation with remote pagination and CSV download.
-- [ ] Max page size enforced server-side (NF-12 / input validation).
+- [x] `internal/db/queries_table.go` — paginated query with optional full-text search.
+- [x] `internal/handlers/api.go` — `GET /api/trade/table` with `page`, `size`, `q` params.
+- [x] `web/templates/partials/table_block.html` — Tabulator.js container div.
+- [x] `web/static/js/charts.js` (or `tables.js`) — Tabulator initialisation with remote pagination and CSV download.
+- [x] Max page size enforced server-side (NF-12 / input validation).
 
 ### Tests
 
-- [ ] `TestTableAPIDefaults` — default pagination (page=1, size=25) returns correct JSON.
-- [ ] `TestTableAPISearch` — `?q=dairy` filters results correctly.
-- [ ] `TestTableAPIMaxPageSize` — requesting `size=9999` is capped at 100.
-- [ ] `TestTableAPIInvalidPage` — `?page=abc` returns 400.
+- [x] `TestTableAPIDefaults` — default pagination (page=1, size=25) returns correct JSON.
+- [x] `TestTableAPISearch` — `?q=dairy` filters results correctly.
+- [x] `TestTableAPIMaxPageSize` — requesting `size=9999` is capped at 100.
+- [x] `TestTableAPIInvalidPage` — `?page=abc` returns 400.
 
 ### Exit Criterion
 
