@@ -29,11 +29,11 @@ function initTradeTable(tableId, apiUrl, downloadBtnId, searchInputId, yearFrom,
         ajaxURL: apiUrl,
         ajaxParams: function() {
             const params = { page: table.getPage(), size: table.getPageSize() };
-            if (currentSearch) params.q = currentSearch;
-            if (yearFrom) params.year_from = yearFrom;
-            if (yearTo)   params.year_to   = yearTo;
-            if (typeIE)   params.type_ie   = typeIE;
-            if (typeGS)   params.type_gs   = typeGS;
+            if (currentSearch)    params.q        = currentSearch;
+            if (yearFrom != null) params.year_from = yearFrom;
+            if (yearTo   != null) params.year_to   = yearTo;
+            if (typeIE)           params.type_ie   = typeIE;
+            if (typeGS)           params.type_gs   = typeGS;
             return params;
         },
         ajaxResponse: function(_url, _params, response) {

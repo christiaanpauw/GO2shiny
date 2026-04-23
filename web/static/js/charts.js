@@ -53,10 +53,10 @@ async function initTimeSeries(divId, baseUrl, yearFrom, yearTo, typeIE, typeGS) 
 
     // Build URL with filter params.
     const params = new URLSearchParams();
-    if (yearFrom) params.set('year_from', yearFrom);
-    if (yearTo)   params.set('year_to',   yearTo);
-    if (typeIE)   params.set('type_ie',   typeIE);
-    if (typeGS)   params.set('type_gs',   typeGS);
+    if (yearFrom != null) params.set('year_from', yearFrom);
+    if (yearTo   != null) params.set('year_to',   yearTo);
+    if (typeIE)           params.set('type_ie',   typeIE);
+    if (typeGS)           params.set('type_gs',   typeGS);
     const apiUrl = baseUrl + (params.toString() ? '?' + params.toString() : '');
 
     // Dispose previous chart instance if present.
@@ -113,7 +113,7 @@ async function initTreemap(divId, baseUrl, year, typeIE, typeGS) {
     if (!el) return null;
 
     const params = new URLSearchParams();
-    if (year) params.set('year', year);
+    if (year != null) params.set('year', year);
     // Map typeIE to the treemap direction (single direction required).
     const direction = (typeIE === 'Imports') ? 'Imports' : 'Exports';
     params.set('direction', direction);
