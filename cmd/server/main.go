@@ -105,6 +105,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Compress(5))
+	r.Use(handlers.SecurityHeaders)
 
 	// Static assets: GET /static/*
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticFiles))))
@@ -123,13 +124,18 @@ func main() {
 		time.Duration(cfg.CacheTTLSeconds)*time.Second,
 	))
 	r.Get("/partials/market-report", handlers.MarketReportPartial(marketQuerier, marketTmpl))
-	r.Get("/api/trade/summary", handlers.SummaryAPIHandler(querier))
-	r.Get("/api/trade/timeseries", handlers.TimeSeriesAPIHandler(chartQuerier))
-	r.Get("/api/trade/treemap", handlers.TreemapAPIHandler(chartQuerier))
-	r.Get("/api/trade/table", handlers.TableAPIHandler(tableQuerier))
-	r.Get("/api/trade/countries", handlers.CountriesAPIHandler(marketQuerier))
-	r.Get("/api/market/timeseries", handlers.CountryTimeSeriesAPIHandler(marketQuerier))
-	r.Get("/api/commodity", handlers.CommodityAPIHandler(commodityQuerier))
+
+	// API routes — rate-limited to 100 concurrent requests (NF-14).
+	r.Group(func(api chi.Router) {
+		api.Use(middleware.Throttle(100))
+		api.Get("/api/trade/summary", handlers.SummaryAPIHandler(querier))
+		api.Get("/api/trade/timeseries", handlers.TimeSeriesAPIHandler(chartQuerier))
+		api.Get("/api/trade/treemap", handlers.TreemapAPIHandler(chartQuerier))
+		api.Get("/api/trade/table", handlers.TableAPIHandler(tableQuerier))
+		api.Get("/api/trade/countries", handlers.CountriesAPIHandler(marketQuerier))
+		api.Get("/api/market/timeseries", handlers.CountryTimeSeriesAPIHandler(marketQuerier))
+		api.Get("/api/commodity", handlers.CommodityAPIHandler(commodityQuerier))
+	})
 
 	addr := ":" + cfg.Port
 	srv := &http.Server{

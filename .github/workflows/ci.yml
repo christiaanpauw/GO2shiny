@@ -35,6 +35,11 @@ jobs:
       - name: Test
         run: go test -race -count=1 ./...
 
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
