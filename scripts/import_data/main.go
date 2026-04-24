@@ -71,6 +71,7 @@ func main() {
 }
 
 // importCountries bulk-copies rows from countriesFile into the countries table.
+// It truncates the table first so that the import is idempotent on restart.
 func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error {
 	rows, err := readCSV(filename)
 	if err != nil {
@@ -80,6 +81,10 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 	// Skip header row.
 	if len(rows) > 0 {
 		rows = rows[1:]
+	}
+
+	if _, err := conn.Exec(ctx, "TRUNCATE countries"); err != nil {
+		return fmt.Errorf("truncate countries: %w", err)
 	}
 
 	copyRows := make([][]any, 0, len(rows))
@@ -110,6 +115,7 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 }
 
 // importTradeFlows bulk-copies rows from filename into the trade_flows table.
+// It truncates the table first so that the import is idempotent on restart.
 func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) error {
 	rows, err := readCSV(filename)
 	if err != nil {
@@ -119,6 +125,10 @@ func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) erro
 	// Skip header row.
 	if len(rows) > 0 {
 		rows = rows[1:]
+	}
+
+	if _, err := conn.Exec(ctx, "TRUNCATE trade_flows"); err != nil {
+		return fmt.Errorf("truncate trade_flows: %w", err)
 	}
 
 	copyRows := make([][]any, 0, len(rows))
