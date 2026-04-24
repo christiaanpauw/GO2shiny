@@ -163,10 +163,10 @@ func TestCommodityAPINilQuerier(t *testing.T) {
 func TestHSCodeDrillDown(t *testing.T) {
 	mock := &mockCommodityQuerier{
 		hsCodeTotals: []db.HSCodeTotal{
-			{HSCode: "04",     ValueNZD: 5_000},  // 2-digit
-			{HSCode: "0401",   ValueNZD: 3_000},  // 4-digit
-			{HSCode: "0402",   ValueNZD: 2_000},  // 4-digit
-			{HSCode: "040110", ValueNZD: 1_500},  // 6-digit
+			{HSCode: "04", ValueNZD: 5_000},     // 2-digit
+			{HSCode: "0401", ValueNZD: 3_000},   // 4-digit
+			{HSCode: "0402", ValueNZD: 2_000},   // 4-digit
+			{HSCode: "040110", ValueNZD: 1_500}, // 6-digit
 		},
 	}
 

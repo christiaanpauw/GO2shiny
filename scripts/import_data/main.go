@@ -117,6 +117,10 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 		return fmt.Errorf("insert countries: %w", err)
 	}
 
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit countries: %w", err)
+	}
+
 	slog.Info("imported countries", "rows", n)
 	return nil
 }
@@ -178,7 +182,17 @@ func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) erro
 		})
 	}
 
-	n, err := conn.CopyFrom(
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx, "TRUNCATE trade_flows RESTART IDENTITY"); err != nil {
+		return fmt.Errorf("truncate trade_flows: %w", err)
+	}
+
+	n, err := tx.CopyFrom(
 		ctx,
 		pgx.Identifier{"trade_flows"},
 		[]string{"year", "quarter", "country", "region", "type_ie", "type_gs", "commodity", "hs_code", "value_nzd"},
@@ -186,6 +200,10 @@ func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) erro
 	)
 	if err != nil {
 		return fmt.Errorf("COPY trade_flows: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit trade_flows: %w", err)
 	}
 
 	slog.Info("imported trade flows", "rows", n)
