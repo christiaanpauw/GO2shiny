@@ -1,7 +1,7 @@
 # ── Migrate stage ─────────────────────────────────────────────────────────────
 # Installs the goose CLI and bundles the SQL migration files.
 # Used as a one-shot init container in docker-compose.yml.
-FROM golang:1.23-alpine AS migrate
+FROM golang:1.24-alpine AS migrate
 
 RUN go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
 
@@ -13,7 +13,7 @@ CMD ["up"]
 # ── Importer stage ─────────────────────────────────────────────────────────────
 # Builds the import_data CLI and bundles the CSV seed files.
 # Used as a one-shot init container in docker-compose.yml.
-FROM golang:1.23-alpine AS importer
+FROM golang:1.24-alpine AS importer
 
 WORKDIR /app
 
@@ -31,7 +31,7 @@ ENTRYPOINT ["/bin/import_data"]
 CMD ["-trade", "data/sample/trade_flows.csv", "-countries", "data/sample/countries.csv"]
 
 # ── Build stage ──────────────────────────────────────────────────────────────
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
