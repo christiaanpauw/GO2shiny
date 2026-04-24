@@ -18,7 +18,7 @@ This document breaks the rebuild into ten sequential phases. Each phase has a cl
 - [x] **Phase 5 – Data tables**
 - [x] **Phase 6 – Sidebar filters**
 - [x] **Phase 7 – Market Intelligence tab**
-- [ ] **Phase 8 – Commodity Intelligence tab**
+- [x] **Phase 8 – Commodity Intelligence tab**
 - [ ] **Phase 9 – Polish & UX hardening**
 - [ ] **Phase 10 – Deployment packaging**
 
@@ -262,16 +262,16 @@ F-20–F-22
 
 ### Tasks
 
-- [ ] `internal/db/queries_commodity.go` — commodity and HS code aggregation queries.
-- [ ] `internal/handlers/commodity.go` — `GET /commodity/{direction}`, `GET /api/commodity`.
-- [ ] `web/templates/commodity.html` — three sub-tabs with bar chart + table each.
-- [ ] HS code drill-down: `?hs_digits=2|4|6` query param; validated server-side.
+- [x] `internal/db/queries_commodity.go` — commodity and HS code aggregation queries.
+- [x] `internal/handlers/commodity.go` — `GET /commodity/{direction}`, `GET /api/commodity`.
+- [x] `web/templates/commodity.html` — three sub-tabs with bar chart + table each.
+- [x] HS code drill-down: `?hs_digits=2|4|6` query param; validated server-side.
 
 ### Tests
 
-- [ ] `TestCommodityExportsPage` — GET `/commodity/exports` returns 200.
-- [ ] `TestCommodityAPI` — returns sorted list of commodities with NZD values.
-- [ ] `TestHSCodeDrillDown` — `?hs_digits=4` returns 4-digit codes only.
+- [x] `TestCommodityExportsPage` — GET `/commodity/exports` returns 200.
+- [x] `TestCommodityAPI` — returns sorted list of commodities with NZD values.
+- [x] `TestHSCodeDrillDown` — `?hs_digits=4` returns 4-digit codes only.
 
 ### Exit Criterion
 

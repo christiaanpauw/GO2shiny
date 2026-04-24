@@ -54,6 +54,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	commodityTmpl, err := template.New("").ParseFS(webfs.FS,
+		"templates/base.html",
+		"templates/commodity.html",
+	)
+	if err != nil {
+		slog.Error("parse commodity templates", "err", err)
+		os.Exit(1)
+	}
+
 	// Obtain the static sub-tree for the file server.
 	staticFiles, err := fs.Sub(webfs.FS, "static")
 	if err != nil {
@@ -68,6 +77,7 @@ func main() {
 	var chartQuerier db.ChartQuerier
 	var tableQuerier db.TableQuerier
 	var marketQuerier db.MarketQuerier
+	var commodityQuerier db.CommodityQuerier
 	if cfg.DatabaseURL != "" {
 		dbCtx, dbCancel := context.WithTimeout(context.Background(), 30*time.Second)
 		pool, dbErr := db.Open(dbCtx, cfg.DatabaseURL)
@@ -83,6 +93,7 @@ func main() {
 		chartQuerier = pq
 		tableQuerier = pq
 		marketQuerier = pq
+		commodityQuerier = pq
 	} else {
 		slog.Warn("DATABASE_URL not set; KPI and chart endpoints will return 503")
 	}
@@ -105,6 +116,7 @@ func main() {
 	r.Get("/health", handlers.Health)
 	r.Get("/dashboard", handlers.Dashboard(dashboardTmpl))
 	r.Get("/market", handlers.Market(marketTmpl))
+	r.Get("/commodity/{direction}", handlers.CommodityPage(commodityTmpl))
 	r.Get("/partials/kpis", handlers.KPIHandler(
 		querier,
 		dashboardTmpl,
@@ -117,6 +129,7 @@ func main() {
 	r.Get("/api/trade/table", handlers.TableAPIHandler(tableQuerier))
 	r.Get("/api/trade/countries", handlers.CountriesAPIHandler(marketQuerier))
 	r.Get("/api/market/timeseries", handlers.CountryTimeSeriesAPIHandler(marketQuerier))
+	r.Get("/api/commodity", handlers.CommodityAPIHandler(commodityQuerier))
 
 	addr := ":" + cfg.Port
 	srv := &http.Server{

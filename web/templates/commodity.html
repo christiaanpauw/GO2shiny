@@ -1,0 +1,363 @@
+{{define "content"}}
+
+{{/* Shared utilities — always injected regardless of active tab */}}
+<script>
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+
+{{/* Tab navigation */}}
+<div class="row row-cards">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="commodity-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link{{if eq .Direction "exports"}} active{{end}}"
+               id="tab-exports"
+               href="/commodity/exports"
+               role="tab">
+              Exports
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link{{if eq .Direction "imports"}} active{{end}}"
+               id="tab-imports"
+               href="/commodity/imports"
+               role="tab">
+              Imports
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link{{if eq .Direction "hs"}} active{{end}}"
+               id="tab-hs"
+               href="/commodity/hs"
+               role="tab">
+              HS Code
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{if or (eq .Direction "exports") (eq .Direction "imports")}}
+
+{{/* Bar chart */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          {{if eq .Direction "exports"}}Top Export Commodities{{else}}Top Import Commodities{{end}}
+          (NZD M)
+        </h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-commodity-bar" style="height:400px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{/* Commodity data table */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Commodity Breakdown</h3>
+      </div>
+      <div class="card-body p-0">
+        <div id="commodity-table-container">
+          <p class="text-muted text-center py-4">Loading…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const direction = '{{.Direction}}';
+  const apiDirection = direction === 'exports' ? 'Exports' : 'Imports';
+
+  const p = new URLSearchParams(window.location.search);
+  const yearFrom = p.get('year_from') || '1990';
+  const yearTo   = p.get('year_to')   || String(new Date().getFullYear());
+  const typeGS   = p.get('type_gs')   || '';
+
+  let commodityChart = null;
+
+  async function loadCommodities() {
+    const params = new URLSearchParams({
+      direction: apiDirection,
+      year_from: yearFrom,
+      year_to:   yearTo,
+    });
+    if (typeGS) params.set('type_gs', typeGS);
+
+    try {
+      const resp = await fetch('/api/commodity?' + params.toString());
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      renderBarChart(data);
+      renderTable(data);
+    } catch (e) {
+      console.error('loadCommodities error:', e);
+      document.getElementById('commodity-table-container').innerHTML =
+        '<p class="text-danger text-center py-4">Failed to load commodity data.</p>';
+    }
+  }
+
+  function renderBarChart(data) {
+    const el = document.getElementById('chart-commodity-bar');
+    if (!el || !data || data.length === 0) return;
+
+    if (commodityChart) {
+      commodityChart.dispose();
+    }
+    commodityChart = echarts.init(el);
+    const top = data.slice(0, 20);
+
+    commodityChart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'value',
+        name: 'NZD M',
+        axisLabel: { formatter: function(v) { return v.toFixed(0); } }
+      },
+      yAxis: {
+        type: 'category',
+        data: top.map(function(d) { return d.commodity; }).reverse(),
+        axisLabel: { width: 180, overflow: 'truncate' }
+      },
+      series: [{
+        name: apiDirection + ' (NZD M)',
+        type: 'bar',
+        data: top.map(function(d) { return d.value_nzd; }).reverse(),
+        itemStyle: { color: apiDirection === 'Exports' ? '#1a5276' : '#922b21' }
+      }]
+    });
+  }
+
+  function renderTable(data) {
+    const container = document.getElementById('commodity-table-container');
+    if (!container) return;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p class="text-muted text-center py-4">No data available.</p>';
+      return;
+    }
+
+    const rows = data.map(function(d) {
+      return '<tr>' +
+        '<td>' + escapeHTML(d.commodity) + '</td>' +
+        '<td class="text-end">' + d.value_nzd.toFixed(2) + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="table-responsive">' +
+      '<table class="table table-vcenter card-table table-striped">' +
+      '<thead><tr><th>Commodity</th><th class="text-end">Value (NZD M)</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+      '</div>';
+  }
+
+  // Respond to global sidebar filter changes.
+  document.addEventListener('filter-changed', function(e) {
+    loadCommodities();
+  });
+
+  // Resize chart on window resize (registered once).
+  window.addEventListener('resize', function() {
+    if (commodityChart) commodityChart.resize();
+  });
+
+  // Initial load.
+  loadCommodities();
+})();
+</script>
+
+{{end}}
+
+{{if eq .Direction "hs"}}
+
+{{/* HS digit selector */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">HS Code Drill-Down</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-auto">
+            <label class="form-label">HS Code Level</label>
+            <select id="hs-digits-select" class="form-select" onchange="onHSDigitsChange()">
+              <option value="2">2-digit (Chapter)</option>
+              <option value="4" selected>4-digit (Heading)</option>
+              <option value="6">6-digit (Subheading)</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <label class="form-label">Direction</label>
+            <select id="hs-direction-select" class="form-select" onchange="onHSDigitsChange()">
+              <option value="Exports">Exports</option>
+              <option value="Imports">Imports</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{/* HS Code bar chart */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">HS Code Breakdown (NZD M)</h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-hs-bar" style="height:400px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{/* HS Code data table */}}
+<div class="row row-cards mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">HS Code Table</h3>
+      </div>
+      <div class="card-body p-0">
+        <div id="hs-table-container">
+          <p class="text-muted text-center py-4">Loading…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const p = new URLSearchParams(window.location.search);
+  const yearFrom = p.get('year_from') || '1990';
+  const yearTo   = p.get('year_to')   || String(new Date().getFullYear());
+
+  let hsChart = null;
+
+  async function loadHSCodes() {
+    const digits    = document.getElementById('hs-digits-select').value;
+    const direction = document.getElementById('hs-direction-select').value;
+
+    const params = new URLSearchParams({
+      direction: direction,
+      year_from: yearFrom,
+      year_to:   yearTo,
+      hs_digits: digits,
+    });
+
+    try {
+      const resp = await fetch('/api/commodity?' + params.toString());
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      renderHSBarChart(data, direction);
+      renderHSTable(data);
+    } catch (e) {
+      console.error('loadHSCodes error:', e);
+      document.getElementById('hs-table-container').innerHTML =
+        '<p class="text-danger text-center py-4">Failed to load HS code data.</p>';
+    }
+  }
+
+  function renderHSBarChart(data, direction) {
+    const el = document.getElementById('chart-hs-bar');
+    if (!el || !data || data.length === 0) return;
+
+    if (hsChart) {
+      hsChart.dispose();
+    }
+    hsChart = echarts.init(el);
+    const top = data.slice(0, 20);
+
+    hsChart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'value',
+        name: 'NZD M',
+        axisLabel: { formatter: function(v) { return v.toFixed(0); } }
+      },
+      yAxis: {
+        type: 'category',
+        data: top.map(function(d) { return d.hs_code; }).reverse()
+      },
+      series: [{
+        name: direction + ' (NZD M)',
+        type: 'bar',
+        data: top.map(function(d) { return d.value_nzd; }).reverse(),
+        itemStyle: { color: direction === 'Exports' ? '#1a5276' : '#922b21' }
+      }]
+    });
+  }
+
+  function renderHSTable(data) {
+    const container = document.getElementById('hs-table-container');
+    if (!container) return;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p class="text-muted text-center py-4">No data available.</p>';
+      return;
+    }
+
+    const rows = data.map(function(d) {
+      return '<tr>' +
+        '<td>' + escapeHTML(d.hs_code) + '</td>' +
+        '<td class="text-end">' + d.value_nzd.toFixed(2) + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="table-responsive">' +
+      '<table class="table table-vcenter card-table table-striped">' +
+      '<thead><tr><th>HS Code</th><th class="text-end">Value (NZD M)</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+      '</div>';
+  }
+
+  window.onHSDigitsChange = function() {
+    loadHSCodes();
+  };
+
+  // Respond to global sidebar filter changes.
+  document.addEventListener('filter-changed', function(e) {
+    loadHSCodes();
+  });
+
+  // Resize chart on window resize (registered once).
+  window.addEventListener('resize', function() {
+    if (hsChart) hsChart.resize();
+  });
+
+  // Initial load.
+  loadHSCodes();
+})();
+</script>
+
+{{end}}
+
+{{end}}
