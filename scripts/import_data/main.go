@@ -71,7 +71,7 @@ func main() {
 }
 
 // importCountries bulk-copies rows from countriesFile into the countries table.
-// It truncates the table first so the operation is idempotent.
+// The operation is idempotent: rows whose primary key already exists are skipped.
 func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error {
 	rows, err := readCSV(filename)
 	if err != nil {
@@ -96,24 +96,25 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 		copyRows = append(copyRows, []any{r[0], r[1], iso3})
 	}
 
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("begin transaction: %w", err)
+	// Copy into a temporary staging table, then upsert into the real table so
+	// that re-runs are idempotent (duplicate countries are silently skipped).
+	if _, err = conn.Exec(ctx, `CREATE TEMP TABLE tmp_countries (LIKE countries)`); err != nil {
+		return fmt.Errorf("create temp table: %w", err)
 	}
-	defer tx.Rollback(ctx) //nolint:errcheck
+	defer conn.Exec(ctx, `DROP TABLE IF EXISTS tmp_countries`) //nolint:errcheck
 
-	if _, err := tx.Exec(ctx, "TRUNCATE countries"); err != nil {
-		return fmt.Errorf("truncate countries: %w", err)
-	}
-
-	n, err := tx.CopyFrom(
+	n, err := conn.CopyFrom(
 		ctx,
-		pgx.Identifier{"countries"},
+		pgx.Identifier{"tmp_countries"},
 		[]string{"country", "region", "iso3"},
 		pgx.CopyFromRows(copyRows),
 	)
 	if err != nil {
-		return fmt.Errorf("COPY countries: %w", err)
+		return fmt.Errorf("COPY tmp_countries: %w", err)
+	}
+
+	if _, err = conn.Exec(ctx, `INSERT INTO countries SELECT * FROM tmp_countries ON CONFLICT (country) DO NOTHING`); err != nil {
+		return fmt.Errorf("insert countries: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
@@ -125,7 +126,7 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 }
 
 // importTradeFlows bulk-copies rows from filename into the trade_flows table.
-// It truncates the table first so the operation is idempotent.
+// The table is truncated first so that re-runs remain idempotent.
 func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) error {
 	rows, err := readCSV(filename)
 	if err != nil {
@@ -135,6 +136,11 @@ func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) erro
 	// Skip header row.
 	if len(rows) > 0 {
 		rows = rows[1:]
+	}
+
+	// Truncate to avoid duplicate rows when the importer is re-run.
+	if _, err = conn.Exec(ctx, `TRUNCATE trade_flows`); err != nil {
+		return fmt.Errorf("truncate trade_flows: %w", err)
 	}
 
 	copyRows := make([][]any, 0, len(rows))
