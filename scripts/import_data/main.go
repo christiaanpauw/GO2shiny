@@ -83,7 +83,7 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 		rows = rows[1:]
 	}
 
-	if _, err := conn.Exec(ctx, "TRUNCATE countries"); err != nil {
+	if _, err := conn.Exec(ctx, "TRUNCATE countries CASCADE"); err != nil {
 		return fmt.Errorf("truncate countries: %w", err)
 	}
 
@@ -127,7 +127,7 @@ func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) erro
 		rows = rows[1:]
 	}
 
-	if _, err := conn.Exec(ctx, "TRUNCATE trade_flows"); err != nil {
+	if _, err := conn.Exec(ctx, "TRUNCATE trade_flows CASCADE"); err != nil {
 		return fmt.Errorf("truncate trade_flows: %w", err)
 	}
 
