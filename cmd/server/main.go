@@ -32,10 +32,25 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
 	slog.SetDefault(logger)
 
-	// Parse HTML templates from the embedded filesystem (base templates + partials).
-	tmpl, err := template.New("").ParseFS(webfs.FS, "templates/*.html", "templates/partials/*.html")
+	// Parse per-page template sets so that each page's "content" block is isolated.
+	dashboardTmpl, err := template.New("").ParseFS(webfs.FS,
+		"templates/base.html",
+		"templates/dashboard.html",
+		"templates/partials/kpi_cards.html",
+		"templates/partials/table_block.html",
+	)
 	if err != nil {
-		slog.Error("parse templates", "err", err)
+		slog.Error("parse dashboard templates", "err", err)
+		os.Exit(1)
+	}
+
+	marketTmpl, err := template.New("").ParseFS(webfs.FS,
+		"templates/base.html",
+		"templates/market.html",
+		"templates/partials/market_report.html",
+	)
+	if err != nil {
+		slog.Error("parse market templates", "err", err)
 		os.Exit(1)
 	}
 
@@ -52,6 +67,7 @@ func main() {
 	var querier db.KPIQuerier
 	var chartQuerier db.ChartQuerier
 	var tableQuerier db.TableQuerier
+	var marketQuerier db.MarketQuerier
 	if cfg.DatabaseURL != "" {
 		dbCtx, dbCancel := context.WithTimeout(context.Background(), 30*time.Second)
 		pool, dbErr := db.Open(dbCtx, cfg.DatabaseURL)
@@ -66,6 +82,7 @@ func main() {
 		querier = pq
 		chartQuerier = pq
 		tableQuerier = pq
+		marketQuerier = pq
 	} else {
 		slog.Warn("DATABASE_URL not set; KPI and chart endpoints will return 503")
 	}
@@ -86,16 +103,20 @@ func main() {
 		http.Redirect(w, req, "/dashboard", http.StatusFound)
 	})
 	r.Get("/health", handlers.Health)
-	r.Get("/dashboard", handlers.Dashboard(tmpl))
+	r.Get("/dashboard", handlers.Dashboard(dashboardTmpl))
+	r.Get("/market", handlers.Market(marketTmpl))
 	r.Get("/partials/kpis", handlers.KPIHandler(
 		querier,
-		tmpl,
+		dashboardTmpl,
 		time.Duration(cfg.CacheTTLSeconds)*time.Second,
 	))
+	r.Get("/partials/market-report", handlers.MarketReportPartial(marketQuerier, marketTmpl))
 	r.Get("/api/trade/summary", handlers.SummaryAPIHandler(querier))
 	r.Get("/api/trade/timeseries", handlers.TimeSeriesAPIHandler(chartQuerier))
 	r.Get("/api/trade/treemap", handlers.TreemapAPIHandler(chartQuerier))
 	r.Get("/api/trade/table", handlers.TableAPIHandler(tableQuerier))
+	r.Get("/api/trade/countries", handlers.CountriesAPIHandler(marketQuerier))
+	r.Get("/api/market/timeseries", handlers.CountryTimeSeriesAPIHandler(marketQuerier))
 
 	addr := ":" + cfg.Port
 	srv := &http.Server{
