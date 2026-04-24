@@ -1,5 +1,16 @@
 {{define "content"}}
 
+{{/* Shared utilities — always injected regardless of active tab */}}
+<script>
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+
 {{/* Tab navigation */}}
 <div class="row row-cards">
   <div class="col-12">
@@ -81,6 +92,8 @@
   const yearTo   = p.get('year_to')   || String(new Date().getFullYear());
   const typeGS   = p.get('type_gs')   || '';
 
+  let commodityChart = null;
+
   async function loadCommodities() {
     const params = new URLSearchParams({
       direction: apiDirection,
@@ -106,13 +119,13 @@
     const el = document.getElementById('chart-commodity-bar');
     if (!el || !data || data.length === 0) return;
 
-    const existing = echarts.getInstanceByDom(el);
-    if (existing) existing.dispose();
-
-    const chart = echarts.init(el);
+    if (commodityChart) {
+      commodityChart.dispose();
+    }
+    commodityChart = echarts.init(el);
     const top = data.slice(0, 20);
 
-    chart.setOption({
+    commodityChart.setOption({
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
       xAxis: {
@@ -132,8 +145,6 @@
         itemStyle: { color: apiDirection === 'Exports' ? '#1a5276' : '#922b21' }
       }]
     });
-
-    window.addEventListener('resize', function() { chart.resize(); });
   }
 
   function renderTable(data) {
@@ -161,17 +172,14 @@
       '</div>';
   }
 
-  function escapeHTML(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
   // Respond to global sidebar filter changes.
   document.addEventListener('filter-changed', function(e) {
     loadCommodities();
+  });
+
+  // Resize chart on window resize (registered once).
+  window.addEventListener('resize', function() {
+    if (commodityChart) commodityChart.resize();
   });
 
   // Initial load.
@@ -249,6 +257,8 @@
   const yearFrom = p.get('year_from') || '1990';
   const yearTo   = p.get('year_to')   || String(new Date().getFullYear());
 
+  let hsChart = null;
+
   async function loadHSCodes() {
     const digits    = document.getElementById('hs-digits-select').value;
     const direction = document.getElementById('hs-direction-select').value;
@@ -277,13 +287,13 @@
     const el = document.getElementById('chart-hs-bar');
     if (!el || !data || data.length === 0) return;
 
-    const existing = echarts.getInstanceByDom(el);
-    if (existing) existing.dispose();
-
-    const chart = echarts.init(el);
+    if (hsChart) {
+      hsChart.dispose();
+    }
+    hsChart = echarts.init(el);
     const top = data.slice(0, 20);
 
-    chart.setOption({
+    hsChart.setOption({
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
       xAxis: {
@@ -302,8 +312,6 @@
         itemStyle: { color: direction === 'Exports' ? '#1a5276' : '#922b21' }
       }]
     });
-
-    window.addEventListener('resize', function() { chart.resize(); });
   }
 
   function renderHSTable(data) {
@@ -331,14 +339,6 @@
       '</div>';
   }
 
-  function escapeHTML(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
   window.onHSDigitsChange = function() {
     loadHSCodes();
   };
@@ -346,6 +346,11 @@
   // Respond to global sidebar filter changes.
   document.addEventListener('filter-changed', function(e) {
     loadHSCodes();
+  });
+
+  // Resize chart on window resize (registered once).
+  window.addEventListener('resize', function() {
+    if (hsChart) hsChart.resize();
   });
 
   // Initial load.
