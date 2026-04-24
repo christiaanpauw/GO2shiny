@@ -59,7 +59,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.62
+          version: latest
           # Don't cache between runs to keep lint results fresh.
           skip-cache: false
           # Only report new issues introduced by this commit (on PRs).
