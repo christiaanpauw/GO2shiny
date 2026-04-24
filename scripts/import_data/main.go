@@ -71,6 +71,7 @@ func main() {
 }
 
 // importCountries bulk-copies rows from countriesFile into the countries table.
+// It truncates the table first so the operation is idempotent.
 func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error {
 	rows, err := readCSV(filename)
 	if err != nil {
@@ -95,7 +96,17 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 		copyRows = append(copyRows, []any{r[0], r[1], iso3})
 	}
 
-	n, err := conn.CopyFrom(
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx, "TRUNCATE countries"); err != nil {
+		return fmt.Errorf("truncate countries: %w", err)
+	}
+
+	n, err := tx.CopyFrom(
 		ctx,
 		pgx.Identifier{"countries"},
 		[]string{"country", "region", "iso3"},
@@ -105,11 +116,16 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 		return fmt.Errorf("COPY countries: %w", err)
 	}
 
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit countries: %w", err)
+	}
+
 	slog.Info("imported countries", "rows", n)
 	return nil
 }
 
 // importTradeFlows bulk-copies rows from filename into the trade_flows table.
+// It truncates the table first so the operation is idempotent.
 func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) error {
 	rows, err := readCSV(filename)
 	if err != nil {
@@ -160,7 +176,17 @@ func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) erro
 		})
 	}
 
-	n, err := conn.CopyFrom(
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx, "TRUNCATE trade_flows RESTART IDENTITY"); err != nil {
+		return fmt.Errorf("truncate trade_flows: %w", err)
+	}
+
+	n, err := tx.CopyFrom(
 		ctx,
 		pgx.Identifier{"trade_flows"},
 		[]string{"year", "quarter", "country", "region", "type_ie", "type_gs", "commodity", "hs_code", "value_nzd"},
@@ -168,6 +194,10 @@ func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) erro
 	)
 	if err != nil {
 		return fmt.Errorf("COPY trade_flows: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit trade_flows: %w", err)
 	}
 
 	slog.Info("imported trade flows", "rows", n)
