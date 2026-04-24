@@ -71,6 +71,7 @@ func main() {
 }
 
 // importCountries bulk-copies rows from countriesFile into the countries table.
+// The operation is idempotent: rows whose primary key already exists are skipped.
 func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error {
 	rows, err := readCSV(filename)
 	if err != nil {
@@ -95,14 +96,25 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 		copyRows = append(copyRows, []any{r[0], r[1], iso3})
 	}
 
+	// Copy into a temporary staging table, then upsert into the real table so
+	// that re-runs are idempotent (duplicate countries are silently skipped).
+	if _, err = conn.Exec(ctx, `CREATE TEMP TABLE tmp_countries (LIKE countries)`); err != nil {
+		return fmt.Errorf("create temp table: %w", err)
+	}
+	defer conn.Exec(ctx, `DROP TABLE IF EXISTS tmp_countries`) //nolint:errcheck
+
 	n, err := conn.CopyFrom(
 		ctx,
-		pgx.Identifier{"countries"},
+		pgx.Identifier{"tmp_countries"},
 		[]string{"country", "region", "iso3"},
 		pgx.CopyFromRows(copyRows),
 	)
 	if err != nil {
-		return fmt.Errorf("COPY countries: %w", err)
+		return fmt.Errorf("COPY tmp_countries: %w", err)
+	}
+
+	if _, err = conn.Exec(ctx, `INSERT INTO countries SELECT * FROM tmp_countries ON CONFLICT (country) DO NOTHING`); err != nil {
+		return fmt.Errorf("insert countries: %w", err)
 	}
 
 	slog.Info("imported countries", "rows", n)
@@ -110,6 +122,7 @@ func importCountries(ctx context.Context, conn *pgx.Conn, filename string) error
 }
 
 // importTradeFlows bulk-copies rows from filename into the trade_flows table.
+// The table is truncated first so that re-runs remain idempotent.
 func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) error {
 	rows, err := readCSV(filename)
 	if err != nil {
@@ -119,6 +132,11 @@ func importTradeFlows(ctx context.Context, conn *pgx.Conn, filename string) erro
 	// Skip header row.
 	if len(rows) > 0 {
 		rows = rows[1:]
+	}
+
+	// Truncate to avoid duplicate rows when the importer is re-run.
+	if _, err = conn.Exec(ctx, `TRUNCATE trade_flows`); err != nil {
+		return fmt.Errorf("truncate trade_flows: %w", err)
 	}
 
 	copyRows := make([][]any, 0, len(rows))
