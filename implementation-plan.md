@@ -19,7 +19,7 @@ This document breaks the rebuild into ten sequential phases. Each phase has a cl
 - [x] **Phase 6 – Sidebar filters**
 - [x] **Phase 7 – Market Intelligence tab**
 - [x] **Phase 8 – Commodity Intelligence tab**
-- [ ] **Phase 9 – Polish & UX hardening**
+- [x] **Phase 9 – Polish & UX hardening**
 - [ ] **Phase 10 – Deployment packaging**
 
 ---
@@ -289,19 +289,19 @@ F-52, NF-01–NF-04, NF-13, NF-14
 
 ### Tasks
 
-- [ ] Responsive sidebar (hamburger menu on mobile) via Tabler's built-in JS.
-- [ ] Loading skeletons (CSS) shown until each HTMX partial resolves.
-- [ ] Error states: if an API call fails, display a user-friendly message (not a blank div).
-- [ ] HTTP security headers middleware (NF-13).
-- [ ] Rate limiting: `chi/middleware.Throttle` for the API tier (NF-14).
-- [ ] `govulncheck ./...` added to CI pipeline.
-- [ ] Accessibility: ARIA labels on chart containers, keyboard-navigable sidebar.
+- [x] Responsive sidebar (hamburger menu on mobile) via Tabler's built-in JS.
+- [x] Loading skeletons (CSS) shown until each HTMX partial resolves.
+- [x] Error states: if an API call fails, display a user-friendly message (not a blank div).
+- [x] HTTP security headers middleware (NF-13).
+- [x] Rate limiting: `chi/middleware.Throttle` for the API tier (NF-14).
+- [x] `govulncheck ./...` added to CI pipeline.
+- [x] Accessibility: ARIA labels on chart containers, keyboard-navigable sidebar.
 - [ ] Browser compatibility smoke-test (manual, Chrome + Firefox + Safari).
 
 ### Tests
 
-- [ ] `TestSecurityHeaders` — all required headers present on every response.
-- [ ] `TestRateLimitExceeded` — > threshold requests in 1 s returns 429.
+- [x] `TestSecurityHeaders` — all required headers present on every response.
+- [x] `TestRateLimitExceeded` — > threshold requests in 1 s returns 429.
 
 ### Exit Criterion
 

@@ -18,9 +18,13 @@
   <div class="wrapper">
 
     <!-- Sidebar -->
-    <aside class="navbar navbar-vertical navbar-expand-lg navbar-dark">
+    <aside class="navbar navbar-vertical navbar-expand-lg navbar-dark"
+           role="navigation" aria-label="Main navigation">
       <div class="container-fluid">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu">
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbar-menu"
+                aria-controls="navbar-menu" aria-expanded="false"
+                aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <h1 class="navbar-brand navbar-brand-autodark">
@@ -225,6 +229,18 @@
       },
     };
   }
+  </script>
+  <!-- HTMX error state: show a user-friendly message when a partial fails to load -->
+  <script>
+  document.addEventListener('htmx:responseError', function(evt) {
+    var target = evt.detail.target;
+    if (target) {
+      target.innerHTML =
+        '<div class="alert alert-danger m-3" role="alert">' +
+        'Failed to load data. Please refresh the page or try again later.' +
+        '</div>';
+    }
+  });
   </script>
 </body>
 </html>
